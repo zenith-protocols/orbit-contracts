@@ -50,14 +50,6 @@ pub trait MockPegkeepeer {
     /// * `lot_amount` - The amount of the lot
     /// * `fee` - The amount of the fee
     fn swap(e: Env, amm: Address, token: Address, collateral_token: Address, lot_amount: i128, fee: i128);
-
-    /// Send profit
-    ///
-    /// ### Arguments
-    /// * `fee_taker` - The Address for the fee taker
-    /// * `token` - The Address for the treasury token
-    /// * `profit` - The amount of the profit
-    fn send_profit(e: Env, fee_taker: Address, token: Address, profit: i128);
 }
 
 #[contractimpl]
@@ -89,12 +81,5 @@ impl MockPegkeepeer for MockPegkeeperContract {
         storage::extend_instance(&e);
 
         helper::swap(&e, amm, collateral_token.clone(), token.clone(), lot_amount.clone(), fee.clone());
-    }
-
-    fn send_profit(e: Env, fee_taker: Address, token: Address, profit: i128) {
-        storage::extend_instance(&e);
-
-        let token_client = token::Client::new(&e, &token);
-        token_client.transfer(&e.current_contract_address(), &fee_taker, &profit);
     }
 }

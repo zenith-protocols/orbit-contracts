@@ -59,6 +59,7 @@ fn test_liquidations() {
     // Create the token pair with initial supply.
 
     let pegkeeper = &fixture.mock_pegkeeper;
+    let piet = Address::generate(&fixture.env);
 
     let liq_pct = 100;
     let auction_data = pool_fixture
@@ -73,14 +74,20 @@ fn test_liquidations() {
 
     let pair = &fixture.pairs[0];
 
-    treasury.keep_peg(&pair.address.clone(), &henk, &fixture.tokens[TokenIndex::OUSD].address.clone(), &ousd_bid_amount, &fixture.tokens[TokenIndex::XLM].address.clone(), &xlm_lot_amount,  &(100 as i128));
+    treasury.keep_peg(&piet, &henk, &fixture.tokens[TokenIndex::OUSD].address.clone(), &fixture.tokens[TokenIndex::XLM].address.clone(), &ousd_bid_amount, &xlm_lot_amount,  &(100 as i128), &pair.address.clone());
 
     std::println!("OUSD Balance: {}", fixture.tokens[TokenIndex::OUSD].balance(&pegkeeper.address.clone()) / SCALAR_7);
     std::println!("XLM Balance: {}", fixture.tokens[TokenIndex::XLM].balance(&pegkeeper.address.clone()));
 
-    let logs = fixture.env.logs().all();
-    std::println!("{}", logs.join("\n"));
-    // Check if the liquidation has completed succesfully.
+    pegkeeper.liquidate(&henk, &fixture.tokens[TokenIndex::OUSD].address.clone(), &ousd_bid_amount, &fixture.tokens[TokenIndex::XLM].address.clone(), &xlm_lot_amount, &pool_fixture.pool.address.clone(), &(100 as i128));
+
+    std::println!("OUSD Balance: {}", fixture.tokens[TokenIndex::OUSD].balance(&pegkeeper.address.clone()) / SCALAR_7);
+    std::println!("XLM Balance: {}", fixture.tokens[TokenIndex::XLM].balance(&pegkeeper.address.clone()));
+
+    pegkeeper.swap(&pair.address.clone(), &fixture.tokens[TokenIndex::OUSD].address.clone(), &fixture.tokens[TokenIndex::XLM].address.clone(), &xlm_lot_amount, &0);
+
+    std::println!("OUSD Balance: {}", fixture.tokens[TokenIndex::OUSD].balance(&pegkeeper.address.clone()) / SCALAR_7);
+    std::println!("XLM Balance: {}", fixture.tokens[TokenIndex::XLM].balance(&pegkeeper.address.clone()));
 }
 
 #[test]
@@ -144,14 +151,15 @@ fn test_liquidations_real() {
     fixture.jump_with_sequence(251 * 5);
 
     let pair = &fixture.pairs[0];
+    let piet = Address::generate(&fixture.env);
 
-    treasury.keep_peg(&pair.address.clone(), &henk, &fixture.tokens[TokenIndex::OUSD].address.clone(), &ousd_bid_amount, &fixture.tokens[TokenIndex::XLM].address.clone(), &xlm_lot_amount,  &(100 as i128));
+    treasury.keep_peg(&piet, &henk, &fixture.tokens[TokenIndex::OUSD].address.clone(), &fixture.tokens[TokenIndex::XLM].address.clone(), &ousd_bid_amount, &xlm_lot_amount,  &(100 as i128), &pair.address.clone());
 
     std::println!("OUSD Balance: {}", fixture.tokens[TokenIndex::OUSD].balance(&pegkeeper.address.clone()) / SCALAR_7);
     std::println!("XLM Balance: {}", fixture.tokens[TokenIndex::XLM].balance(&pegkeeper.address.clone()));
 
-    let logs = fixture.env.logs().all();
-    std::println!("{}", logs.join("\n"));
-    // Check if the liquidation has completed succesfully.
+    //print piets balance
+    std::println!("Piet OUSD Balance: {}", fixture.tokens[TokenIndex::OUSD].balance(&piet) / SCALAR_7);
+    std::println!("Piet XLM Balance: {}", fixture.tokens[TokenIndex::XLM].balance(&piet));
 }
 
