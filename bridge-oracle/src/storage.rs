@@ -1,4 +1,4 @@
-use soroban_sdk::{Address, Env, Symbol, contracttype};
+use soroban_sdk::{Address, Env, contracttype};
 use sep_40_oracle::Asset;
 use soroban_sdk::unwrap::UnwrapOptimized;
 
@@ -10,11 +10,10 @@ const LEDGER_BUMP_INSTANCE: u32 = LEDGER_THRESHOLD_INSTANCE + ONE_DAY_LEDGERS; /
 #[derive(Clone)]
 #[contracttype]
 pub enum BridgeOracleDataKey {
-    ToAsset(Asset),
+    ADMIN,
+    ORACLE,
+    BRIDGE(Asset),
 }
-
-const ADMIN_KEY: &str = "Admin";
-const ORACLE_KEY: &str = "Oracle";
 
 /// Bump the instance rent for the contract
 pub fn extend_instance(env: &Env) {
@@ -24,7 +23,7 @@ pub fn extend_instance(env: &Env) {
 }
 
 /// Check if the contract has been initialized
-pub fn is_init(e: &Env) -> bool { e.storage().instance().has(&Symbol::new(e, ADMIN_KEY)) }
+pub fn is_init(e: &Env) -> bool { e.storage().instance().has(&BridgeOracleDataKey::ADMIN) }
 
 /// Fetch the current admin Address
 ///
@@ -33,7 +32,7 @@ pub fn is_init(e: &Env) -> bool { e.storage().instance().has(&Symbol::new(e, ADM
 pub fn get_admin(e: &Env) -> Address {
     e.storage()
         .instance()
-        .get::<Symbol, Address>(&Symbol::new(e, ADMIN_KEY))
+        .get(&BridgeOracleDataKey::ADMIN)
         .unwrap_optimized()
 }
 
@@ -44,17 +43,17 @@ pub fn get_admin(e: &Env) -> Address {
 pub fn set_admin(e: &Env, new_admin: &Address) {
     e.storage()
         .instance()
-        .set::<Symbol, Address>(&Symbol::new(e, ADMIN_KEY), new_admin);
+        .set(&BridgeOracleDataKey::ADMIN, new_admin);
 }
 
 /// Fetch the asset to convert to
 ///
 /// ### Arguments
 /// * `asset` - The asset to convert from
-pub fn get_to_asset(env: &Env, asset: &Asset) -> Asset {
+pub fn get_bridge_asset(env: &Env, asset: &Asset) -> Asset {
     env.storage()
         .instance()
-        .get::<BridgeOracleDataKey, Asset>(&BridgeOracleDataKey::ToAsset(asset.clone()))
+        .get(&BridgeOracleDataKey::BRIDGE(asset.clone()))
         .unwrap_or_else(|| asset.clone())
 }
 
@@ -63,10 +62,10 @@ pub fn get_to_asset(env: &Env, asset: &Asset) -> Asset {
 /// ### Arguments
 /// * `asset` - The asset to convert from
 /// * `to` - The asset to convert to
-pub fn set_to_asset(env: &Env, asset: &Asset, to: &Asset) {
+pub fn set_bridge_asset(env: &Env, asset: &Asset, to: &Asset) {
     env.storage()
         .instance()
-        .set::<BridgeOracleDataKey, Asset>(&BridgeOracleDataKey::ToAsset(asset.clone()), to);
+        .set(&BridgeOracleDataKey::BRIDGE(asset.clone()), to);
 }
 
 /// Fetch the current oracle Address
@@ -76,7 +75,7 @@ pub fn set_to_asset(env: &Env, asset: &Asset, to: &Asset) {
 pub fn get_oracle(env: &Env) -> Address {
     env.storage()
         .instance()
-        .get::<Symbol, Address>(&Symbol::new(env, ORACLE_KEY))
+        .get(&BridgeOracleDataKey::ORACLE)
         .unwrap_optimized()
 }
 
@@ -87,5 +86,5 @@ pub fn get_oracle(env: &Env) -> Address {
 pub fn set_oracle(env: &Env, address: &Address) {
     env.storage()
         .instance()
-        .set::<Symbol, Address>(&Symbol::new(env, ORACLE_KEY), address);
+        .set(&BridgeOracleDataKey::ORACLE, address);
 }

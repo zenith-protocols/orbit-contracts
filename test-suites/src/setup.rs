@@ -3,9 +3,8 @@ use soroban_sdk::{log, testutils::{Address as _, Logs, MockAuth, MockAuthInvoke}
 use crate::{
     dependencies::pool::{default_reserve_metadata, Request, RequestType, ReserveEmissionMetadata},
     test_fixture::{TestFixture, TokenIndex, SCALAR_7},
-    dependencies::mock_treasury::MockAsset,
-    dependencies::treasury::Asset,
 };
+use crate::dependencies::bridge_oracle::Asset;
 use crate::dependencies::pool::ReserveConfig;
 
 /// Create a test fixture with a pool and a whale depositing and borrowing all assets
@@ -87,13 +86,14 @@ pub fn create_fixture_with_data<'a>(mock: bool) -> TestFixture<'a> {
 
     // initiate the Treasury
     let token: Address = fixture.tokens[TokenIndex::OUSD].address.clone();
+    let token_asset: Asset = Asset::Stellar(fixture.tokens[TokenIndex::OUSD].address.clone());
+    let asset: Asset = Asset::Stellar(fixture.tokens[TokenIndex::USDC].address.clone());
+    fixture.bridge_oracle.add_asset(&token_asset, &asset);
     if mock {
-        let asset: MockAsset = MockAsset::Stellar(fixture.tokens[TokenIndex::USDC].address.clone());
-        fixture.mock_treasury.deploy_stablecoin(&token, &asset, &pool_fixture.pool.address);
+        fixture.mock_treasury.add_stablecoin(&token, &pool_fixture.pool.address);
         fixture.tokens[TokenIndex::OUSD].set_admin(&fixture.mock_treasury.address);
     } else {
-        let asset: Asset = Asset::Stellar(fixture.tokens[TokenIndex::USDC].address.clone());
-        fixture.treasury.deploy_stablecoin(&token, &asset, &pool_fixture.pool.address);
+        fixture.treasury.add_stablecoin(&token, &pool_fixture.pool.address);
         fixture.tokens[TokenIndex::OUSD].set_admin(&fixture.treasury.address);
     }
 

@@ -6,11 +6,10 @@ pub(crate) const LEDGER_BUMP_SHARED: u32 = 241920; // ~ 14 days
 
 #[derive(Clone)]
 #[contracttype]
-pub enum DataKey {
+pub enum TreasuryDataKey {
     ADMIN,
     BLENDPOOL(Address), // mapping token address to the blend pool addres
     PEGKEEPER,
-    BRIDGEORACLE,
 }
 
 /// Bump the instance rent for the contract
@@ -21,7 +20,7 @@ pub fn extend_instance(e: &Env) {
 }
 
 /// Check if the contract has been initialized
-pub fn is_init(e: &Env) -> bool { e.storage().instance().has(&DataKey::ADMIN) }
+pub fn is_init(e: &Env) -> bool { e.storage().instance().has(&TreasuryDataKey::ADMIN) }
 
 /// Fetch the current admin Address
 ///
@@ -30,7 +29,7 @@ pub fn is_init(e: &Env) -> bool { e.storage().instance().has(&DataKey::ADMIN) }
 pub fn get_admin(e: &Env) -> Address {
     e.storage()
         .instance()
-        .get(&DataKey::ADMIN)
+        .get(&TreasuryDataKey::ADMIN)
         .unwrap_optimized()
 }
 
@@ -41,7 +40,7 @@ pub fn get_admin(e: &Env) -> Address {
 pub fn set_admin(e: &Env, new_admin: &Address) {
     e.storage()
         .instance()
-        .set(&DataKey::ADMIN, new_admin);
+        .set(&TreasuryDataKey::ADMIN, new_admin);
 }
 
 // Fetch the current admin Address
@@ -51,7 +50,7 @@ pub fn set_admin(e: &Env, new_admin: &Address) {
 pub fn get_pegkeeper(e: &Env) -> Address {
     e.storage()
         .instance()
-        .get(&DataKey::PEGKEEPER)
+        .get(&TreasuryDataKey::PEGKEEPER)
         .unwrap_optimized()
 }
 
@@ -62,7 +61,7 @@ pub fn get_pegkeeper(e: &Env) -> Address {
 pub fn set_pegkeeper(e: &Env, new_pegkeeper: &Address) {
     e.storage()
         .instance()
-        .set(&DataKey::PEGKEEPER, new_pegkeeper);
+        .set(&TreasuryDataKey::PEGKEEPER, new_pegkeeper);
 }
 
 /// Fetch the current treasury Address depending on token address
@@ -72,7 +71,7 @@ pub fn set_pegkeeper(e: &Env, new_pegkeeper: &Address) {
 pub fn get_blend_pool(e: &Env, token_address: &Address) -> Address {
     e.storage()
         .instance()
-        .get(&DataKey::BLENDPOOL(token_address.clone()))
+        .get(&TreasuryDataKey::BLENDPOOL(token_address.clone()))
         .unwrap_optimized()
 }
 
@@ -83,26 +82,5 @@ pub fn get_blend_pool(e: &Env, token_address: &Address) -> Address {
 pub fn set_blend_pool(e: &Env, token_address: &Address, blend_pool: &Address) {
     e.storage()
         .instance()
-        .set(&DataKey::BLENDPOOL(token_address.clone()), blend_pool);
-}
-
-/// Fetch the current bridge oracle
-///
-/// ### Panics
-/// If the bridge oracle does not exist
-pub fn get_bridge_oracle(e: &Env) -> Address {
-    e.storage()
-        .instance()
-        .get(&DataKey::BRIDGEORACLE)
-        .unwrap_optimized()
-}
-
-/// Set the bridge oracle
-///
-/// ### Arguments
-/// * `bridge_oracle` - The Address for the bridge oracle
-pub fn set_bridge_oracle(e: &Env, bridge_oracle: &Address) {
-    e.storage()
-        .instance()
-        .set(&DataKey::BRIDGEORACLE, bridge_oracle);
+        .set(&TreasuryDataKey::BLENDPOOL(token_address.clone()), blend_pool);
 }

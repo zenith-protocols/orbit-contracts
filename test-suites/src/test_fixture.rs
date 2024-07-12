@@ -177,19 +177,15 @@ impl TestFixture<'_> {
         let (mock_pegkeeper_id, mock_pegkeeper_client) = create_mock_pegkeeper(&e);
 
         // init bridge oracle
-        if mock {
-            bridge_oracle_client.initialize(&mock_treasury_id, &mock_oracle_id);
-        } else {
-            bridge_oracle_client.initialize(&treasury_id, &mock_oracle_id);
-        }
+        bridge_oracle_client.initialize(&admin, &mock_oracle_id);
 
         // init pegkeeper
         pegkeeper_client.initialize(&treasury_id, &router_id);
         mock_pegkeeper_client.initialize(&mock_treasury_id, &router_id);
 
         // init treasury
-        treasury_client.initialize(&admin, &bridge_oracle_id, &pegkeeper_id);
-        mock_treasury_client.initialize(&admin, &bridge_oracle_id, &mock_pegkeeper_id);
+        treasury_client.initialize(&admin, &pegkeeper_id);
+        mock_treasury_client.initialize(&admin, &mock_pegkeeper_id);
 
 
         let fixture = TestFixture {

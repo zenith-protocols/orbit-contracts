@@ -6,7 +6,7 @@ mod treasury_contract {
     );
 }
 
-pub use treasury_contract::{Client as TreasuryClient, WASM as TREASURY_WASM, Asset};
+pub use treasury_contract::{Client as TreasuryClient, WASM as TREASURY_WASM};
 
 pub fn create_treasury<'a>(e: &Env) -> (Address, TreasuryClient<'a>) {
     let contract_id = Address::generate(e);

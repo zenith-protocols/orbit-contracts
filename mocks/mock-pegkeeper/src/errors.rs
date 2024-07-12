@@ -9,4 +9,5 @@ pub enum MockPegkeeperError {
 
     /// already initialized
     AlreadyInitializedError = 102,
+    NotProfitable = 103,
 }

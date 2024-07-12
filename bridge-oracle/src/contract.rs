@@ -53,7 +53,7 @@ impl BridgeOracle for BridgeOracleContract {
         storage::extend_instance(&e);
         let admin = storage::get_admin(&e);
         admin.require_auth();
-        storage::set_to_asset(&e, &asset, &to);
+        storage::set_bridge_asset(&e, &asset, &to);
 
         e.events().publish(("BridgeOracle", Symbol::new(&e, "add_asset")), (asset.clone(), to.clone()));
     }
@@ -75,7 +75,7 @@ impl BridgeOracle for BridgeOracleContract {
 
     fn lastprice(env: Env, asset: Asset) -> Option<PriceData> {
         storage::extend_instance(&env);
-        let to_asset = storage::get_to_asset(&env, &asset);
+        let to_asset = storage::get_bridge_asset(&env, &asset);
         let oracle = storage::get_oracle(&env);
 
         let args: Vec<Val> = vec![&env,

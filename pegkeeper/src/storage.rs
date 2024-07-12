@@ -7,7 +7,7 @@ const LEDGER_BUMP_INSTANCE: u32 = LEDGER_THRESHOLD_INSTANCE + ONE_DAY_LEDGERS; /
 
 #[derive(Clone)]
 #[contracttype]
-pub enum DataKey {
+pub enum PegkeeperDataKey {
     ADMIN,
     ROUTER,
 }
@@ -19,7 +19,7 @@ pub fn extend_instance(e: &Env) {
 }
 
 /// Check if the contract has been initialized
-pub fn is_init(e: &Env) -> bool { e.storage().instance().has(&DataKey::ADMIN) }
+pub fn is_init(e: &Env) -> bool { e.storage().instance().has(&PegkeeperDataKey::ADMIN) }
 
 /// Fetch the current admin Address
 ///
@@ -28,7 +28,7 @@ pub fn is_init(e: &Env) -> bool { e.storage().instance().has(&DataKey::ADMIN) }
 pub fn get_admin(e: &Env) -> Address {
     e.storage()
         .instance()
-        .get(&DataKey::ADMIN)
+        .get(&PegkeeperDataKey::ADMIN)
         .unwrap_optimized()
 }
 
@@ -39,7 +39,7 @@ pub fn get_admin(e: &Env) -> Address {
 pub fn set_admin(e: &Env, new_admin: &Address) {
     e.storage()
         .instance()
-        .set(&DataKey::ADMIN, new_admin);
+        .set(&PegkeeperDataKey::ADMIN, new_admin);
 }
 
 /// Fetch the current router Address
@@ -49,7 +49,7 @@ pub fn set_admin(e: &Env, new_admin: &Address) {
 pub fn get_router(e: &Env) -> Address {
     e.storage()
         .instance()
-        .get(&DataKey::ROUTER)
+        .get(&PegkeeperDataKey::ROUTER)
         .unwrap_optimized()
 }
 
@@ -60,5 +60,5 @@ pub fn get_router(e: &Env) -> Address {
 pub fn set_router(e: &Env, new_router: &Address) {
     e.storage()
         .instance()
-        .set(&DataKey::ROUTER, new_router);
+        .set(&PegkeeperDataKey::ROUTER, new_router);
 }
