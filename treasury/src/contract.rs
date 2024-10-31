@@ -49,7 +49,7 @@ pub trait Treasury {
     /// * `auction_creator` - The Address of the token
     /// * `liquidation` - The Address of the liquidation contract
     /// * `amount` - The amount of the flashloan
-    fn keep_peg(e: Env, fee_taker: Address, auction: Address, token: Address, collateral_token: Address, bid_amount: i128, lot_amount: i128, liq_amount: i128, amm: Address);
+    fn keep_peg(e: Env, name: Symbol, token: Address, amount: i128, args: Vec<Val>);
 
     /// (Admin only) Set a new address as the admin of this pool
     ///
@@ -82,7 +82,6 @@ impl Treasury for TreasuryContract {
 
     fn add_stablecoin(e: Env, token: Address, blend_pool: Address) {
         storage::extend_instance(&e);
-
         let admin = storage::get_admin(&e);
         admin.require_auth();
 
@@ -126,42 +125,37 @@ impl Treasury for TreasuryContract {
         ]);
     }
 
-    fn keep_peg(e: Env, fee_taker: Address, auction: Address, token: Address, collateral_token: Address, bid_amount: i128, lot_amount: i128, liq_amount: i128, amm: Address) {
+    fn keep_peg(e: Env, name: Symbol, token: Address, amount: i128, args: Vec<Val>) {
         storage::extend_instance(&e);
 
         let pegkeeper: Address = storage::get_pegkeeper(&e);
         let blend_pool: Address = storage::get_blend_pool(&e, &token);
 
         // Mint the tokens to the pegkeeper
-        StellarAssetClient::new(&e, &token).mint(&pegkeeper, &bid_amount);
+        StellarAssetClient::new(&e, &token).mint(&pegkeeper, &amount);
 
         let token_client = TokenClient::new(&e, &token);
-        let token_balance_before = token_client.balance(&e.current_contract_address());
 
-        // Execute operation
-        let fl_receive_args = vec![
+        let func_args: Vec<Val> = vec![
             &e,
-            fee_taker.into_val(&e),
-            auction.into_val(&e),
             token.into_val(&e),
-            collateral_token.into_val(&e),
-            bid_amount.into_val(&e),
-            lot_amount.into_val(&e),
-            liq_amount.into_val(&e),
-            blend_pool.into_val(&e),
-            amm.into_val(&e),
+            amount.into_val(&e),
+            args.into_val(&e),
         ];
-        e.invoke_contract::<Val>(&pegkeeper, &Symbol::new(&e, "fl_receive"), fl_receive_args);
+        e.invoke_contract::<Val>(&pegkeeper, &name, func_args.clone());
 
-        let _ = token_client.try_transfer_from(&e.current_contract_address(), &pegkeeper, &e.current_contract_address(), &bid_amount);
+        let res = token_client.try_transfer_from(
+            &e.current_contract_address(),
+            &pegkeeper,
+            &e.current_contract_address(),
+            &amount,
+        );
 
-        let token_balance_after = token_client.balance(&e.current_contract_address());
-        if token_balance_after.clone() < token_balance_before.clone() + bid_amount.clone() {
-            panic_with_error!(&e, TreasuryError::FlashloanNotRepaid);
+        if let Ok(Ok(_)) = res {
+            token_client.burn(&e.current_contract_address(), &amount);
+        } else {
+            panic_with_error!(e, TreasuryError::FlashloanFailedError);
         }
-
-        // Burn the tokens
-        token_client.burn(&e.current_contract_address(), &(token_balance_after.clone() - token_balance_before.clone()));
     }
 
     fn set_admin(e: Env, new_admin: Address) {
