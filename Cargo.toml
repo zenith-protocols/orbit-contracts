@@ -6,6 +6,7 @@ members = [
     "pegkeeper",
     "test-suites",
     "bridge-oracle",
+    "admin",
     "mocks/mock-pegkeeper",
     "mocks/mock-treasury"]
 
