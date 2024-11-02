@@ -46,7 +46,7 @@ impl BridgeOracle for BridgeOracleContract {
         storage::set_admin(&e, &admin);
         storage::set_oracle(&e, &oracle);
 
-        e.events().publish(("BridgeOracle", Symbol::new(&e, "init")), (admin.clone(),oracle.clone()));
+        e.events().publish(("BridgeOracle", Symbol::new(&e, "init")), (admin.clone(), oracle.clone()));
     }
 
     fn add_asset(e: Env, asset: Asset, to: Asset) {

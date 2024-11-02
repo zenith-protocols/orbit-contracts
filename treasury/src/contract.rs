@@ -42,6 +42,16 @@ pub trait Treasury {
     /// If the caller is not the admin
     fn increase_supply(e: Env, token: Address, amount: i128);
 
+    /// (Admin only) Decrease the supply of the pool
+    ///
+    /// ### Arguments
+    /// * `amount` - The amount to decrease the supply by
+    ///
+    /// ### Panics
+    /// If the caller is not the admin
+    /// If the supply is less than the amount
+    fn decrease_supply(e: Env, token: Address, amount: i128);
+
     /// Flashloan function for keeping the peg of stablecoins
     ///
     /// ### Arguments
@@ -50,15 +60,6 @@ pub trait Treasury {
     /// * `liquidation` - The Address of the liquidation contract
     /// * `amount` - The amount of the flashloan
     fn keep_peg(e: Env, name: Symbol, token: Address, amount: i128, args: Vec<Val>);
-
-    /// (Admin only) Set a new address as the admin of this pool
-    ///
-    /// ### Arguments
-    /// * `new_admin` - The new admin address
-    ///
-    /// ### Panics
-    /// If the caller is not the admin
-    fn set_admin(e: Env, admin: Address);
 
     /// (Admin only) Set a new address as the pegkeeper
     ///
@@ -78,6 +79,8 @@ impl Treasury for TreasuryContract {
 
         storage::set_pegkeeper(&e, &pegkeeper);
         storage::set_admin(&e, &admin);
+
+        e.events().publish(("Treasury", Symbol::new(&e, "initialize")), (admin.clone(), pegkeeper.clone()));
     }
 
     fn add_stablecoin(e: Env, token: Address, blend_pool: Address) {
@@ -86,6 +89,8 @@ impl Treasury for TreasuryContract {
         admin.require_auth();
 
         storage::set_blend_pool(&e, &token, &blend_pool);
+
+        e.events().publish(("Treasury", Symbol::new(&e, "add_stablecoin")), (token.clone(), blend_pool.clone()));
     }
 
     fn increase_supply(e: Env, token: Address, amount: i128) {
@@ -123,26 +128,44 @@ impl Treasury for TreasuryContract {
                 amount,
             },
         ]);
+
+        e.events().publish(("Treasury", Symbol::new(&e, "increase_supply")), (token.clone(), amount.clone()));
     }
 
-    fn keep_peg(e: Env, name: Symbol, token: Address, amount: i128, args: Vec<Val>) {
+    fn decrease_supply(e: Env, token: Address, amount: i128) {
+        storage::extend_instance(&e);
+        let admin = storage::get_admin(&e);
+        admin.require_auth();
+
+        let blend = storage::get_blend_pool(&e, &token);
+        PoolClient::new(&e, &blend).submit(&e.current_contract_address(), &e.current_contract_address(), &e.current_contract_address(), &vec![
+            &e,
+            Request {
+                request_type: 1_u32, // WITHDRAW RequestType
+                address: token.clone(),
+                amount,
+            },
+        ]);
+
+        TokenClient::new(&e, &token).burn(&e.current_contract_address(), &amount);
+
+        e.events().publish(("Treasury", Symbol::new(&e, "decrease_supply")), (token.clone(), amount.clone()));
+    }
+
+    fn keep_peg(e: Env, name: Symbol, args: Vec<Val>) {
         storage::extend_instance(&e);
 
+        let token = args[0] as Address;
+        let amount = args[1] as i128;
+
         let pegkeeper: Address = storage::get_pegkeeper(&e);
-        let blend_pool: Address = storage::get_blend_pool(&e, &token);
 
         // Mint the tokens to the pegkeeper
         StellarAssetClient::new(&e, &token).mint(&pegkeeper, &amount);
 
         let token_client = TokenClient::new(&e, &token);
 
-        let func_args: Vec<Val> = vec![
-            &e,
-            token.into_val(&e),
-            amount.into_val(&e),
-            args.into_val(&e),
-        ];
-        e.invoke_contract::<Val>(&pegkeeper, &name, func_args.clone());
+        e.invoke_contract::<Val>(&pegkeeper, &name, args.clone());
 
         let res = token_client.try_transfer_from(
             &e.current_contract_address(),
@@ -156,15 +179,8 @@ impl Treasury for TreasuryContract {
         } else {
             panic_with_error!(e, TreasuryError::FlashloanFailedError);
         }
-    }
 
-    fn set_admin(e: Env, new_admin: Address) {
-        storage::extend_instance(&e);
-        let admin = storage::get_admin(&e);
-        admin.require_auth();
-        new_admin.require_auth();
-
-        storage::set_admin(&e, &new_admin);
+        e.events().publish(("Treasury", Symbol::new(&e, "keep_peg")), (token.clone(), amount.clone()));
     }
 
     fn set_pegkeeper(e: Env, new_pegkeeper: Address) {
@@ -173,5 +189,7 @@ impl Treasury for TreasuryContract {
         admin.require_auth();
 
         storage::set_pegkeeper(&e, &new_pegkeeper);
+
+        e.events().publish(("Treasury", Symbol::new(&e, "set_pegkeeper")), new_pegkeeper.clone());
     }
 }

@@ -15,6 +15,5 @@ pub enum TreasuryError {
     InvalidAmount = 506,
     OverflowError = 507,
     FlashloanFailedError = 508,
-    SupplyError = 509,
     FlashloanNotRepaid = 510
 }

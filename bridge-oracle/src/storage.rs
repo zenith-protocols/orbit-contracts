@@ -15,20 +15,14 @@ pub enum BridgeOracleDataKey {
     BRIDGE(Asset),
 }
 
-/// Bump the instance rent for the contract
 pub fn extend_instance(env: &Env) {
     env.storage()
         .instance()
         .extend_ttl(LEDGER_THRESHOLD_INSTANCE, LEDGER_BUMP_INSTANCE);
 }
 
-/// Check if the contract has been initialized
 pub fn is_init(e: &Env) -> bool { e.storage().instance().has(&BridgeOracleDataKey::ADMIN) }
 
-/// Fetch the current admin Address
-///
-/// ### Panics
-/// If the admin does not exist
 pub fn get_admin(e: &Env) -> Address {
     e.storage()
         .instance()
@@ -36,20 +30,12 @@ pub fn get_admin(e: &Env) -> Address {
         .unwrap_optimized()
 }
 
-/// Set a new admin
-///
-/// ### Arguments
-/// * `new_admin` - The Address for the admin
 pub fn set_admin(e: &Env, new_admin: &Address) {
     e.storage()
         .instance()
         .set(&BridgeOracleDataKey::ADMIN, new_admin);
 }
 
-/// Fetch the asset to convert to
-///
-/// ### Arguments
-/// * `asset` - The asset to convert from
 pub fn get_bridge_asset(env: &Env, asset: &Asset) -> Asset {
     env.storage()
         .instance()
@@ -57,21 +43,12 @@ pub fn get_bridge_asset(env: &Env, asset: &Asset) -> Asset {
         .unwrap_or_else(|| asset.clone())
 }
 
-/// Set the asset to convert to
-///
-/// ### Arguments
-/// * `asset` - The asset to convert from
-/// * `to` - The asset to convert to
 pub fn set_bridge_asset(env: &Env, asset: &Asset, to: &Asset) {
     env.storage()
         .instance()
         .set(&BridgeOracleDataKey::BRIDGE(asset.clone()), to);
 }
 
-/// Fetch the current oracle Address
-///
-/// ### Panics
-/// If the oracle does not exist
 pub fn get_oracle(env: &Env) -> Address {
     env.storage()
         .instance()
@@ -79,10 +56,6 @@ pub fn get_oracle(env: &Env) -> Address {
         .unwrap_optimized()
 }
 
-/// Set a new oracle
-///
-/// ### Arguments
-/// * `address` - The Address for the oracle
 pub fn set_oracle(env: &Env, address: &Address) {
     env.storage()
         .instance()

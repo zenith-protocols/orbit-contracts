@@ -13,8 +13,8 @@ pub fn liquidate(e: &Env, auction_creator: Address, token_a: Address, token_a_bi
   let fill_requests = vec![
       e,
       Request {
-          request_type: 6 as u32,
-          address: auction_creator.clone(), // liquidationAuction
+          request_type: 6 as u32, // liquidationAuction
+          address: auction_creator.clone(),
           amount: liq_amount.clone(),
       },
       Request {
