@@ -13,23 +13,58 @@ pub trait Admin {
     /// Initializes the bridge oracle
     /// # Arguments
     /// * `admin` - The admin address
-    /// * `oracle` - The oracle contract address
+    /// * `treasury` - The treasury address
+    /// * `bridge_oracle` - The bridge oracle address
     fn initialize(e: Env, admin: Address, treasury: Address, bridge_oracle: Address);
 
-    fn new_stablecoin(e: Env, token_a: Address, token_b: Address, blend_pool: Address, initial_supply: i128);
+    /// Creates a new stablecoin
+    /// # Arguments
+    /// * `token` - The address of the token to add
+    /// * `asset` - The asset of the fiat currency to peg the new token to
+    /// * `blend_pool` - The address of the blend pool
+    /// * `initial_supply` - The initial supply of the new token lended to the blend pool
+    fn new_stablecoin(e: Env, token: Address, asset: Asset, blend_pool: Address, initial_supply: i128);
 
+    /// Updates the pegkeeper
+    /// # Arguments
+    /// * `pegkeeper` - The address of the pegkeeper
     fn update_pegkeeper(e: Env, pegkeeper: Address);
 
+    /// Updates the oracle
+    /// # Arguments
+    /// * `oracle` - The address of the oracle
     fn update_oracle(e: Env, oracle: Address);
 
+    /// Updates the supply of a token
+    /// # Arguments
+    /// * `token` - The address of the token
+    /// * `amount` - The amount to update the supply by can be positive or negative
     fn update_supply(e: Env, token: Address, amount: i128);
 
+    /// Updates the blend pool
+    /// # Arguments
+    /// * `pool` - The address of the blend pool
+    /// * `backstop_take_rate` - The backstop take rate
+    /// * `max_positions` - The maximum number of positions
     fn update_pool(e: Env, pool: Address, backstop_take_rate: u32, max_positions: u32);
 
+    /// Sets the reserve of a blend pool
+    /// # Arguments
+    /// * `pool` - The address of the blend pool
+    /// * `asset` - The address of the asset
+    /// * `metadata` - The reserve configuration
     fn set_reserve(e: Env, pool: Address, asset: Address, metadata: ReserveConfig);
 
+    /// Sets the emissions configuration of a blend pool
+    /// # Arguments
+    /// * `pool` - The address of the blend pool
+    /// * `res_emission_metadata` - The reserve emission metadata
     fn set_emissions_config(e: Env, pool: Address, res_emission_metadata: Vec<ReserveEmissionMetadata>);
 
+    /// Sets the status of a blend pool
+    /// # Arguments
+    /// * `pool` - The address of the blend pool
+    /// * `pool_status` - The status of the blend pool
     fn set_status(e: Env, pool: Address, pool_status: u32);
 
 }
@@ -47,7 +82,7 @@ impl Admin for AdminContract {
         storage::set_bridge_oracle(&e, &bridge_oracle);
     }
 
-    fn new_stablecoin(e: Env, token_a: Address, asset: Asset, blend_pool: Address, initial_supply: i128) {
+    fn new_stablecoin(e: Env, token: Address, asset: Asset, blend_pool: Address, initial_supply: i128) {
         storage::extend_instance(&e);
         let admin = storage::get_admin(&e);
         admin.require_auth();
@@ -55,11 +90,11 @@ impl Admin for AdminContract {
         let treasury = TreasuryClient::new(&e, &storage::get_treasury(&e));
         let bridge_oracle = BridgeOracleClient::new(&e, &storage::get_bridge_oracle(&e));
         let token_asset = Asset { //TODO: Check this
-            Stellar: token_a.clone()
+            Stellar: token.clone()
         };
         bridge_oracle.add_asset(&token_asset, &asset);
-        treasury.add_stablecoin(&token_a, &blend_pool);
-        treasury.increase_supply(&token_a, &initial_supply);
+        treasury.add_stablecoin(&token, &blend_pool);
+        treasury.increase_supply(&token, &initial_supply);
     }
 
     fn update_pegkeeper(e: Env, pegkeeper: Address) {
