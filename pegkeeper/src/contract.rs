@@ -17,20 +17,21 @@ pub trait Pegkeeper {
     /// Execute operation
     ///
     /// ### Arguments
-    /// * `fee_taker` - The Address for the fee taker
-    /// * `auction` - The Address for the blend auction
-    /// * `token` - The Address for the treasury token
-    /// * `collateral_token` - The Address for the collateral token
-    /// * `bid_amount` - The amount of the bid
-    /// * `lot_amount` - The amount of the lot
-    /// * `liq_amount` - The amount of the liquidation
+    /// * `token` - The Address for the token
+    /// * `amount` - The amount received of the token
     /// * `blend_pool` - The Address for the blend pool
+    /// * `auction` - The Address for the auction
+    /// * `collateral_token` - The Address for the collateral token
+    /// * `lot_amount` - The amount of the collateral token
+    /// * `liq_amount` - The amount to liquidate
     /// * `amm` - The Address for the AMM
-    fn fl_receive(e: Env, fee_taker: Address, auction: Address, token: Address, collateral_token: Address, bid_amount: i128, lot_amount: i128, liq_amount: i128, blend_pool: Address, amm: Address);
+    /// * `fee_taker` - The Address for the fee taker
+    fn fl_receive(e: Env, token: Address, amount: i128, blend_pool: Address, auction: Address, collateral_token: Address, lot_amount: i128, liq_amount: i128, amm: Address, fee_taker: Address);
 }
 
 #[contractimpl]
 impl Pegkeeper for PegkeeperContract {
+
     fn initialize(e: Env, admin: Address, router: Address) {
         storage::extend_instance(&e);
 
@@ -41,7 +42,8 @@ impl Pegkeeper for PegkeeperContract {
         storage::set_router(&e, &router);
         storage::set_admin(&e, &admin);
     }
-    fn fl_receive(e: Env, fee_taker: Address, auction: Address, token: Address, collateral_token: Address, bid_amount: i128, lot_amount: i128, liq_amount: i128, blend_pool: Address, amm: Address) {
+
+    fn fl_receive(e: Env, token: Address, amount: i128, blend_pool: Address, auction: Address, collateral_token: Address, lot_amount: i128, liq_amount: i128, amm: Address, fee_taker: Address) {
         storage::extend_instance(&e);
 
         let admin = storage::get_admin(&e);
@@ -50,7 +52,7 @@ impl Pegkeeper for PegkeeperContract {
         let token_client = token::Client::new(&e, &token);
         let balance_before = token_client.balance(&e.current_contract_address());
 
-        helper::liquidate(&e, auction, token.clone(), bid_amount.clone(), collateral_token.clone(), lot_amount.clone(), blend_pool.clone(), liq_amount.clone());
+        helper::liquidate(&e, auction, token.clone(), amount.clone(), collateral_token.clone(), lot_amount.clone(), blend_pool.clone(), liq_amount.clone());
         helper::swap(&e, amm, collateral_token.clone(), token.clone(), lot_amount.clone(), 0);
 
         let balance_after = token_client.balance(&e.current_contract_address());
@@ -65,7 +67,7 @@ impl Pegkeeper for PegkeeperContract {
         token_client.approve(
             &e.current_contract_address(),
             &admin,
-            &bid_amount,
+            &amount,
             &(e.ledger().sequence() + 1),
         );
     }

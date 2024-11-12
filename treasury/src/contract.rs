@@ -157,10 +157,8 @@ impl Treasury for TreasuryContract {
 
         let token = args[0] as Address;
         let amount = args[1] as i128;
-
         let pegkeeper: Address = storage::get_pegkeeper(&e);
 
-        // Mint the tokens to the pegkeeper
         StellarAssetClient::new(&e, &token).mint(&pegkeeper, &amount);
 
         let token_client = TokenClient::new(&e, &token);
