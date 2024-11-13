@@ -3,8 +3,6 @@ use crate::dependencies::pool::{Client as PoolClient, Request};
 use soroban_sdk::{contract, contractclient, contractimpl, panic_with_error, token, vec, Address, Env, IntoVal, Symbol, TryFromVal, Val, Vec};
 use soroban_sdk::auth::{ContractContext, InvokerContractAuthEntry, SubContractInvocation};
 use crate::errors::TreasuryError;
-use token::Client as TokenClient;
-use sep_41_token::StellarAssetClient;
 
 #[contract]
 pub struct TreasuryContract;
@@ -17,7 +15,7 @@ pub trait Treasury {
     /// ### Arguments
     /// * `admin` - The Address for the admin
     /// * `token` - The Address for the token
-    /// * `blend_pool` - The Address for the blend pool
+    /// * `pegkeeper` - The Address for the pegkeeper
     ///
     /// ### Panics
     /// If the contract is already initialized
@@ -55,16 +53,20 @@ pub trait Treasury {
     /// Flashloan function for keeping the peg of stablecoins
     ///
     /// ### Arguments
-    /// * `pair` - The Address of the AMM pair
-    /// * `auction_creator` - The Address of the token
-    /// * `liquidation` - The Address of the liquidation contract
-    /// * `amount` - The amount of the flashloan
+    /// * `name` - The name of the function to call
+    /// * `args` - The arguments for the function first argument has to be token and second amount
+    ///
+    /// ### Panics
+    /// If the flashloan is not profitable
     fn keep_peg(e: Env, name: Symbol, args: Vec<Val>);
 
     /// (Admin only) Set a new address as the pegkeeper
     ///
     /// ### Arguments
     /// * `pegkeeper` - The new pegkeeper address
+    ///
+    /// ### Panics
+    /// If the caller is not the admin
     fn set_pegkeeper(e: Env, pegkeeper: Address);
 }
 
@@ -98,7 +100,11 @@ impl Treasury for TreasuryContract {
         let admin = storage::get_admin(&e);
         admin.require_auth();
 
-        StellarAssetClient::new(&e, &token).mint(&e.current_contract_address(), &amount);
+        if amount <= 0 {
+            panic_with_error!(e, TreasuryError::InvalidAmount);
+        }
+
+        token::StellarAssetClient::new(&e, &token).mint(&e.current_contract_address(), &amount);
 
         let blend = storage::get_blend_pool(&e, &token);
         let args: Vec<Val> = vec![
@@ -135,6 +141,10 @@ impl Treasury for TreasuryContract {
         let admin = storage::get_admin(&e);
         admin.require_auth();
 
+        if amount <= 0 {
+            panic_with_error!(e, TreasuryError::InvalidAmount);
+        }
+
         let blend = storage::get_blend_pool(&e, &token);
         PoolClient::new(&e, &blend).submit(&e.current_contract_address(), &e.current_contract_address(), &e.current_contract_address(), &vec![
             &e,
@@ -145,8 +155,7 @@ impl Treasury for TreasuryContract {
             },
         ]);
 
-        TokenClient::new(&e, &token).burn(&e.current_contract_address(), &amount);
-
+        token::TokenClient::new(&e, &token).burn(&e.current_contract_address(), &amount);
         e.events().publish(("Treasury", Symbol::new(&e, "decrease_supply")), (token.clone(), amount.clone()));
     }
 
@@ -157,9 +166,13 @@ impl Treasury for TreasuryContract {
         let amount = i128::try_from_val(&e, &args.get(1).unwrap()).unwrap();
         let pegkeeper: Address = storage::get_pegkeeper(&e);
 
-        StellarAssetClient::new(&e, &token).mint(&pegkeeper, &amount);
+        if amount <= 0 {
+            panic_with_error!(e, TreasuryError::InvalidAmount);
+        }
 
-        let token_client = TokenClient::new(&e, &token);
+        token::StellarAssetClient::new(&e, &token).mint(&pegkeeper, &amount);
+
+        let token_client = token::TokenClient::new(&e, &token);
 
         e.invoke_contract::<Val>(&pegkeeper, &name, args.clone());
 

@@ -8,7 +8,7 @@ pub(crate) const LEDGER_BUMP_SHARED: u32 = 241920; // ~ 14 days
 #[contracttype]
 pub enum TreasuryDataKey {
     ADMIN,
-    BLENDPOOL(Address), // mapping token address to the blend pool addres
+    BLENDPOOL(Address),
     PEGKEEPER,
 }
 
