@@ -3,10 +3,14 @@ mod bridge_oracle_contract {
     soroban_sdk::contractimport!(file = "../wasm/orbit/bridge_oracle.wasm");
 }
 
-pub use bridge_oracle_contract::{Client as BridgeOracleClient, WASM as BRIDGE_ORACLE_WASM, Asset};
+pub use bridge_oracle::{BridgeOracleClient, BridgeOracleContract};
 
-pub fn create_bridge_oracle<'a>(e: &Env) -> (Address, BridgeOracleClient<'a>) {
+pub fn create_bridge_oracle<'a>(e: &Env, wasm: bool) -> (Address, BridgeOracleClient<'a>) {
     let contract_id = Address::generate(e);
-    e.register_contract_wasm(&contract_id, BRIDGE_ORACLE_WASM);
+    if wasm {
+        e.register_contract_wasm(&contract_id, bridge_oracle_contract::WASM);
+    } else {
+        e.register_contract(&contract_id, BridgeOracleContract {});
+    }
     (contract_id.clone(), BridgeOracleClient::new(e, &contract_id))
 }

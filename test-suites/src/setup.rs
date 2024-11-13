@@ -4,14 +4,14 @@ use crate::{
     dependencies::pool::{default_reserve_metadata, Request, RequestType, ReserveEmissionMetadata},
     test_fixture::{TestFixture, TokenIndex, SCALAR_7},
 };
-use crate::dependencies::bridge_oracle::Asset;
+use admin::dependencies::bridge_oracle::Asset;
 use crate::dependencies::pool::ReserveConfig;
 
 /// Create a test fixture with a pool and a whale depositing and borrowing all assets
-pub fn create_fixture_with_data<'a>(mock: bool) -> TestFixture<'a> {
+pub fn create_fixture_with_data<'a>(mock: bool, wasm: bool) -> TestFixture<'a> {
     std::println!("===================================== Fixture Create With Data ===========================================");
 
-    let mut fixture = TestFixture::create(mock);
+    let mut fixture = TestFixture::create(mock, wasm);
 
     // mint whale tokens
     let frodo = fixture.users[0].clone();
@@ -21,9 +21,7 @@ pub fn create_fixture_with_data<'a>(mock: bool) -> TestFixture<'a> {
 
     // mint LP tokens with whale
     fixture.tokens[TokenIndex::BLND].mint(&frodo, &(500_0010_000_0000_0000 * SCALAR_7));
-    // fixture.tokens[TokenIndex::BLND].approve(&frodo, &fixture.lp.address, &i128::MAX, &99999);
     fixture.tokens[TokenIndex::USDC].mint(&frodo, &(12_5010_000_0000_0000 * SCALAR_7));
-    // fixture.tokens[TokenIndex::USDC].approve(&frodo, &fixture.lp.address, &i128::MAX, &
     fixture.lp.join_pool(
         &(500_000_0000 * SCALAR_7),
         &svec![
@@ -82,22 +80,7 @@ pub fn create_fixture_with_data<'a>(mock: bool) -> TestFixture<'a> {
             share: 0_400_0000,
         },
     ];
-    pool_fixture.pool.set_emissions_config(&reserve_emissions);
-
-    // initiate the Treasury
-    let token: Address = fixture.tokens[TokenIndex::OUSD].address.clone();
-    let token_asset: Asset = Asset::Stellar(fixture.tokens[TokenIndex::OUSD].address.clone());
-    let asset: Asset = Asset::Stellar(fixture.tokens[TokenIndex::USDC].address.clone());
-    fixture.bridge_oracle.add_asset(&token_asset, &asset);
-    if mock {
-        fixture.mock_treasury.add_stablecoin(&token, &pool_fixture.pool.address);
-        fixture.tokens[TokenIndex::OUSD].set_admin(&fixture.mock_treasury.address);
-    } else {
-        fixture.treasury.add_stablecoin(&token, &pool_fixture.pool.address);
-        fixture.tokens[TokenIndex::OUSD].set_admin(&fixture.treasury.address);
-    }
-
-
+    fixture.admin_contract.set_emissions_config(&pool_fixture.pool.address, &reserve_emissions);
     // deposit into backstop, add to reward zone
     fixture
         .backstop
@@ -108,7 +91,6 @@ pub fn create_fixture_with_data<'a>(mock: bool) -> TestFixture<'a> {
         .add_reward(&pool_fixture.pool.address, &Address::generate(&fixture.env));
     pool_fixture.pool.set_status(&0);
     pool_fixture.pool.update_status();
-
     // enable emissions
     fixture.emitter.distribute();
     fixture.backstop.gulp_emissions();
@@ -116,30 +98,12 @@ pub fn create_fixture_with_data<'a>(mock: bool) -> TestFixture<'a> {
 
     fixture.jump(60);
 
-    if mock {
-        fixture.mock_treasury.increase_supply(&token, &(1_000_000 * SCALAR_7));
-    } else {
-        fixture.treasury.increase_supply(&token, &(1_000_000 * SCALAR_7));
-    }
-
-    // supply and borrow OUSD for 80% utilization (close to target)
-    // let requests: SVec<Request> = svec![
-    //     &fixture.env,
-    //     Request {
-    //         request_type: RequestType::SupplyCollateral as u32,
-    //         address: fixture.tokens[TokenIndex::OUSD].address.clone(),
-    //         amount: 10_000 * 10i128.pow(6),
-    //     },
-    //     Request {
-    //         request_type: RequestType::Borrow as u32,
-    //         address: fixture.tokens[TokenIndex::OUSD].address.clone(),
-    //         amount: 8_000 * 10i128.pow(6),
-    //     },
-    // ];
-   
-    // pool_fixture.pool.submit(&frodo, &frodo, &frodo, &requests);
-
-    std::println!("===================================== Fixture Create With Data Successfully ===========================================");
+    // initiate the Treasury
+    let token: Address = fixture.tokens[TokenIndex::OUSD].address.clone();
+    let asset: Asset = Asset::Other(Symbol::new(&fixture.env, "USD"));
+    let initial_supply: i128 = 1_000_000 * SCALAR_7;
+    fixture.tokens[TokenIndex::OUSD].set_admin(&fixture.admin_contract.address);
+    fixture.admin_contract.new_stablecoin(&token, &asset, &pool_fixture.pool.address, &initial_supply);
 
     fixture.jump(60 * 60); // 1 hr
 
@@ -155,7 +119,56 @@ mod tests {
 
     #[test]
     fn test_create_fixture_with_data_wasm_mock() {
-        let fixture: TestFixture<'_> = create_fixture_with_data(true);
+        let fixture: TestFixture<'_> = create_fixture_with_data(true, true);
+        let frodo: &Address = fixture.users.get(0).unwrap();
+        let pool_fixture: &PoolFixture = fixture.pools.get(0).unwrap();
+
+        // validate backstop deposit and drop
+        assert_eq!(
+            50_000 * SCALAR_7,
+            fixture.lp.balance(&fixture.backstop.address)
+        );
+        assert_eq!(
+            10_000_000 * SCALAR_7,
+            fixture.tokens[TokenIndex::BLND].balance(&fixture.admin)
+        );
+
+        //Check treasury supply
+        assert_eq!(
+            1_000_000 * SCALAR_7,
+            fixture.tokens[TokenIndex::OUSD].balance(&pool_fixture.pool.address)
+        );
+
+        let henk = Address::generate(&fixture.env);
+        fixture.tokens[TokenIndex::XLM].mint(&henk, &(100_000 * SCALAR_7)); // 100k XLM
+        let requests = svec![
+            &fixture.env,
+            Request {
+                request_type: RequestType::SupplyCollateral as u32,
+                address: fixture.tokens[TokenIndex::XLM].address.clone(),
+                amount: 50_000 * SCALAR_7,
+            },
+            Request {
+                request_type: RequestType::Borrow as u32,
+                address: fixture.tokens[TokenIndex::OUSD].address.clone(),
+                amount: 1_000 * SCALAR_7,
+            },
+        ];
+        pool_fixture.pool.submit(&henk, &henk, &henk, &requests);
+
+        assert_eq!(
+            50_000 * SCALAR_7,
+            fixture.tokens[TokenIndex::XLM].balance(&pool_fixture.pool.address)
+        );
+        assert_eq!(
+            1_000 * SCALAR_7,
+            fixture.tokens[TokenIndex::OUSD].balance(&henk)
+        );
+    }
+
+    #[test]
+    fn test_create_fixture_with_data_mock() {
+        let fixture: TestFixture<'_> = create_fixture_with_data(true, false);
         let frodo: &Address = fixture.users.get(0).unwrap();
         let pool_fixture: &PoolFixture = fixture.pools.get(0).unwrap();
 
@@ -204,7 +217,56 @@ mod tests {
 
     #[test]
     fn test_create_fixture_with_data_wasm() {
-        let fixture: TestFixture<'_> = create_fixture_with_data(false);
+        let fixture: TestFixture<'_> = create_fixture_with_data(false, true);
+        let frodo: &Address = fixture.users.get(0).unwrap();
+        let pool_fixture: &PoolFixture = fixture.pools.get(0).unwrap();
+
+        // validate backstop deposit and drop
+        assert_eq!(
+            50_000 * SCALAR_7,
+            fixture.lp.balance(&fixture.backstop.address)
+        );
+        assert_eq!(
+            10_000_000 * SCALAR_7,
+            fixture.tokens[TokenIndex::BLND].balance(&fixture.admin)
+        );
+
+        //Check treasury supply
+        assert_eq!(
+            1_000_000 * SCALAR_7,
+            fixture.tokens[TokenIndex::OUSD].balance(&pool_fixture.pool.address)
+        );
+
+        let henk = Address::generate(&fixture.env);
+        fixture.tokens[TokenIndex::XLM].mint(&henk, &(100_000 * SCALAR_7)); // 100k XLM
+        let requests = svec![
+            &fixture.env,
+            Request {
+                request_type: RequestType::SupplyCollateral as u32,
+                address: fixture.tokens[TokenIndex::XLM].address.clone(),
+                amount: 50_000 * SCALAR_7,
+            },
+            Request {
+                request_type: RequestType::Borrow as u32,
+                address: fixture.tokens[TokenIndex::OUSD].address.clone(),
+                amount: 1_000 * SCALAR_7,
+            },
+        ];
+        pool_fixture.pool.submit(&henk, &henk, &henk, &requests);
+
+        assert_eq!(
+            50_000 * SCALAR_7,
+            fixture.tokens[TokenIndex::XLM].balance(&pool_fixture.pool.address)
+        );
+        assert_eq!(
+            1_000 * SCALAR_7,
+            fixture.tokens[TokenIndex::OUSD].balance(&henk)
+        );
+    }
+
+    #[test]
+    fn test_create_fixture_with_data() {
+        let fixture: TestFixture<'_> = create_fixture_with_data(false, false);
         let frodo: &Address = fixture.users.get(0).unwrap();
         let pool_fixture: &PoolFixture = fixture.pools.get(0).unwrap();
 

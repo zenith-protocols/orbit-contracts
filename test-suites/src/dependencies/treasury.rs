@@ -6,10 +6,15 @@ mod treasury_contract {
     );
 }
 
-pub use treasury_contract::{Client as TreasuryClient, WASM as TREASURY_WASM};
+pub use treasury_contract::WASM as POOL_WASM;
+pub use treasury::{TreasuryClient, TreasuryContract};
 
-pub fn create_treasury<'a>(e: &Env) -> (Address, TreasuryClient<'a>) {
+pub fn create_treasury<'a>(e: &Env, wasm: bool) -> (Address, TreasuryClient<'a>) {
     let contract_id = Address::generate(e);
-    e.register_contract_wasm(&contract_id, TREASURY_WASM);
+    if wasm {
+        e.register_contract_wasm(&contract_id, treasury_contract::WASM);
+    } else {
+        e.register_contract(&contract_id, TreasuryContract {});
+    }
     (contract_id.clone(), TreasuryClient::new(e, &contract_id))
 }

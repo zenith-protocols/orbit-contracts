@@ -21,13 +21,14 @@ use soroban_sdk::testutils::{Address as _, BytesN as _, Ledger, LedgerInfo};
 use soroban_sdk::{vec as svec, Address, BytesN, Env, String, Map, Symbol};
 
 use crate::dependencies::pair::{PAIR_WASM, PairClient};
-use crate::dependencies::treasury::{TreasuryClient, TREASURY_WASM, create_treasury};
+use crate::dependencies::pair_factory::{PairFactoryClient, create_pair_factory};
+use crate::dependencies::router::{RouterClient, create_router};
+use crate::dependencies::admin::{AdminClient, create_admin};
 use crate::dependencies::bridge_oracle::{BridgeOracleClient, create_bridge_oracle};
-use crate::dependencies::pair_factory::{create_pair_factory, PairFactoryClient};
-use crate::dependencies::router::{create_router, RouterClient};
-use crate::dependencies::mock_treasury::{create_mock_treasury, MockTreasuryClient};
-use crate::dependencies::mock_pegkeeper::{create_mock_pegkeeper, MockPegkeeperClient};
-use crate::dependencies::pegkeeper::{create_pegkeeper, PegkeeperClient};
+use crate::dependencies::treasury::{TreasuryClient, create_treasury};
+use crate::dependencies::mock_treasury::{MockTreasuryClient, create_mock_treasury};
+use crate::dependencies::pegkeeper::{PegkeeperClient, create_pegkeeper};
+use crate::dependencies::mock_pegkeeper::{MockPegkeeperClient, create_mock_pegkeeper};
 
 pub const SCALAR_7: i128 = 1_000_0000;
 pub const SCALAR_9: i128 = 1_000_000_000;
@@ -38,6 +39,8 @@ pub enum TokenIndex {
     USDC = 1,
     XLM = 2,
     OUSD = 3,
+    OEURO = 4,
+    OGBP = 5,
 }
 
 pub struct PoolFixture<'a> {
@@ -67,6 +70,7 @@ pub struct TestFixture<'a> {
     pub pair_factory: PairFactoryClient<'a>,
     pub pairs: Vec<PairClient<'a>>,
     pub router: RouterClient<'a>,
+    pub admin_contract: AdminClient<'a>,
     pub bridge_oracle: BridgeOracleClient<'a>,
     pub treasury: TreasuryClient<'a>,
     pub mock_treasury: MockTreasuryClient<'a>,
@@ -80,7 +84,7 @@ impl TestFixture<'_> {
     /// Deploys BLND (0), USDC (1), wETH (2), XLM (3), and STABLE (4) test tokens, alongside all required
     /// Blend Protocol dependencies, including a BLND-USDC LP.
     
-    pub fn create<'a>(mock: bool) -> TestFixture<'a> {
+    pub fn create<'a>(mock: bool, wasm: bool) -> TestFixture<'a> {
         let e = Env::default();
         e.mock_all_auths();
         e.budget().reset_unlimited();
@@ -103,6 +107,8 @@ impl TestFixture<'_> {
         let (usdc_id, usdc_client) = create_stellar_token(&e, &admin);
         let (xlm_id, xlm_client) = create_stellar_token(&e, &admin);
         let (ousd_id, ousd_client) = create_stellar_token(&e, &admin);
+        let (oeuro_id, oeuro_client) = create_stellar_token(&e, &admin);
+        let (ogbp_id, ogbp_client) = create_stellar_token(&e, &admin);
 
         // deploy Blend Protocol dependencies
         let (backstop_id, backstop_client) = create_backstop(&e);
@@ -152,6 +158,9 @@ impl TestFixture<'_> {
                 &e,
                 Asset::Stellar(usdc_id),
                 Asset::Stellar(xlm_id.clone()),
+                Asset::Other(Symbol::new(&e, "USD")),
+                Asset::Other(Symbol::new(&e, "EURO")),
+                Asset::Other(Symbol::new(&e, "GBP")),
             ],
             &7,
             &300,
@@ -160,6 +169,9 @@ impl TestFixture<'_> {
             &e,
             1_0000000,    // usdc
             0_1000000,    // xlm
+            1_0000000,    // usd
+            1_1000000,    // euro
+            1_2000000,    // gbp
         ]);
 
         // Initialize soroswap
@@ -170,22 +182,29 @@ impl TestFixture<'_> {
         router_client.initialize(&pair_factory_id);
 
         // Deploy orbit dependencies
-        let (bridge_oracle_id, bridge_oracle_client) = create_bridge_oracle(&e);
-        let (treasury_id, treasury_client) = create_treasury(&e);
-        let (mock_treasury_id, mock_treasury_client) = create_mock_treasury(&e);
-        let (pegkeeper_id, pegkeeper_client) = create_pegkeeper(&e);
-        let (mock_pegkeeper_id, mock_pegkeeper_client) = create_mock_pegkeeper(&e);
+        let (admin_id, admin_client) = create_admin(&e, wasm);
+        let (bridge_oracle_id, bridge_oracle_client) = create_bridge_oracle(&e, wasm);
+        let (treasury_id, treasury_client) = create_treasury(&e, wasm);
+        let (mock_treasury_id, mock_treasury_client) = create_mock_treasury(&e, wasm);
+        let (pegkeeper_id, pegkeeper_client) = create_pegkeeper(&e, wasm);
+        let (mock_pegkeeper_id, mock_pegkeeper_client) = create_mock_pegkeeper(&e, wasm);
 
+        if mock {
+            admin_client.initialize(&admin, &mock_treasury_id, &bridge_oracle_id);
+
+        } else {
+            admin_client.initialize(&admin, &treasury_id, &bridge_oracle_id);
+        }
         // init bridge oracle
-        bridge_oracle_client.initialize(&admin, &mock_oracle_id);
+        bridge_oracle_client.initialize(&admin_id, &mock_oracle_id);
 
         // init pegkeeper
         pegkeeper_client.initialize(&treasury_id, &router_id);
         mock_pegkeeper_client.initialize(&mock_treasury_id, &router_id);
 
         // init treasury
-        treasury_client.initialize(&admin, &pegkeeper_id);
-        mock_treasury_client.initialize(&admin, &mock_pegkeeper_id);
+        treasury_client.initialize(&admin_id, &pegkeeper_id);
+        mock_treasury_client.initialize(&admin_id, &mock_pegkeeper_id);
 
 
         let fixture = TestFixture {
@@ -208,6 +227,7 @@ impl TestFixture<'_> {
                 xlm_client,
                 ousd_client
             ],
+            admin_contract: admin_client,
             treasury: treasury_client,
             mock_treasury: mock_treasury_client,
             pegkeeper: pegkeeper_client,
@@ -219,7 +239,7 @@ impl TestFixture<'_> {
 
     pub fn create_pool(&mut self, name: String, backstop_take_rate: u32, max_positions: u32) {
         let pool_id = self.pool_factory.deploy(
-            &self.admin,
+            &self.admin_contract.address,
             &name,
             &BytesN::<32>::random(&self.env),
             &self.bridge_oracle.address.clone(),
@@ -251,10 +271,7 @@ impl TestFixture<'_> {
     ) {
         let mut pool_fixture = self.pools.remove(pool_index);
         let token = &self.tokens[asset_index];
-        pool_fixture
-            .pool
-            .queue_set_reserve(&token.address, reserve_config);
-        let index = pool_fixture.pool.set_reserve(&token.address);
+        let index = self.admin_contract.set_reserve(&pool_fixture.pool.address, &token.address, reserve_config);
         pool_fixture.reserves.insert(asset_index, index);
         self.pools.insert(pool_index, pool_fixture);
     }

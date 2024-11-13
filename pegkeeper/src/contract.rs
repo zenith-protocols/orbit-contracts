@@ -1,4 +1,4 @@
-use soroban_sdk::{contract, contractclient, contractimpl, panic_with_error, token, Address, Env};
+use soroban_sdk::{contract, contractclient, contractimpl, panic_with_error, token, Address, Env, Symbol};
 use crate::{errors::PegkeeperError, storage, helper};
 
 #[contract]
@@ -41,6 +41,7 @@ impl Pegkeeper for PegkeeperContract {
 
         storage::set_router(&e, &router);
         storage::set_admin(&e, &admin);
+        e.events().publish(("Pegkeeper", Symbol::new(&e, "init")), (admin.clone(), router.clone()));
     }
 
     fn fl_receive(e: Env, token: Address, amount: i128, blend_pool: Address, auction: Address, collateral_token: Address, lot_amount: i128, liq_amount: i128, amm: Address, fee_taker: Address) {
@@ -70,5 +71,7 @@ impl Pegkeeper for PegkeeperContract {
             &amount,
             &(e.ledger().sequence() + 1),
         );
+
+        e.events().publish(("Pegkeeper", Symbol::new(&e, "fl_receive")), (token.clone(), amount.clone()));
     }
 }

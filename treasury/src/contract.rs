@@ -1,6 +1,6 @@
 use crate::storage;
 use crate::dependencies::pool::{Client as PoolClient, Request};
-use soroban_sdk::{contract, contractclient, contractimpl, panic_with_error, token, vec, Address, Env, IntoVal, Symbol, Val, Vec};
+use soroban_sdk::{contract, contractclient, contractimpl, panic_with_error, token, vec, Address, Env, IntoVal, Symbol, TryFromVal, Val, Vec};
 use soroban_sdk::auth::{ContractContext, InvokerContractAuthEntry, SubContractInvocation};
 use crate::errors::TreasuryError;
 use token::Client as TokenClient;
@@ -59,7 +59,7 @@ pub trait Treasury {
     /// * `auction_creator` - The Address of the token
     /// * `liquidation` - The Address of the liquidation contract
     /// * `amount` - The amount of the flashloan
-    fn keep_peg(e: Env, name: Symbol, token: Address, amount: i128, args: Vec<Val>);
+    fn keep_peg(e: Env, name: Symbol, args: Vec<Val>);
 
     /// (Admin only) Set a new address as the pegkeeper
     ///
@@ -98,10 +98,8 @@ impl Treasury for TreasuryContract {
         let admin = storage::get_admin(&e);
         admin.require_auth();
 
-        // Mint the tokens
         StellarAssetClient::new(&e, &token).mint(&e.current_contract_address(), &amount);
 
-        // Deposit the tokens into the blend pool
         let blend = storage::get_blend_pool(&e, &token);
         let args: Vec<Val> = vec![
             &e,
@@ -155,8 +153,8 @@ impl Treasury for TreasuryContract {
     fn keep_peg(e: Env, name: Symbol, args: Vec<Val>) {
         storage::extend_instance(&e);
 
-        let token = args[0] as Address;
-        let amount = args[1] as i128;
+        let token = Address::try_from_val(&e, &args.get(0).unwrap()).unwrap();
+        let amount = i128::try_from_val(&e, &args.get(1).unwrap()).unwrap();
         let pegkeeper: Address = storage::get_pegkeeper(&e);
 
         StellarAssetClient::new(&e, &token).mint(&pegkeeper, &amount);

@@ -1,4 +1,4 @@
-use soroban_sdk::{contract, contractclient, contractimpl, vec, Address, Env, Symbol, Vec, Val, IntoVal, panic_with_error};
+use soroban_sdk::{contract, contractclient, contractimpl, vec, Address, Env, Symbol, Vec, Val, IntoVal, panic_with_error, token};
 use crate::error::AdminError;
 use crate::storage;
 use crate::dependencies::pool::{Client as PoolClient, ReserveConfig, ReserveEmissionMetadata};
@@ -53,7 +53,7 @@ pub trait Admin {
     /// * `pool` - The address of the blend pool
     /// * `asset` - The address of the asset
     /// * `metadata` - The reserve configuration
-    fn set_reserve(e: Env, pool: Address, asset: Address, metadata: ReserveConfig);
+    fn set_reserve(e: Env, pool: Address, asset: Address, metadata: ReserveConfig) -> u32;
 
     /// Sets the emissions configuration of a blend pool
     /// # Arguments
@@ -75,7 +75,7 @@ impl Admin for AdminContract {
     fn initialize(e: Env, admin: Address, treasury: Address, bridge_oracle: Address) {
         storage::extend_instance(&e);
         if storage::is_init(&e) {
-            panic_with_error!(AdminError::AlreadyInitializedError);
+            panic_with_error!(&e, AdminError::AlreadyInitializedError);
         }
         storage::set_admin(&e, &admin);
         storage::set_treasury(&e, &treasury);
@@ -87,14 +87,16 @@ impl Admin for AdminContract {
         let admin = storage::get_admin(&e);
         admin.require_auth();
 
-        let treasury = TreasuryClient::new(&e, &storage::get_treasury(&e));
+        let treasury = storage::get_treasury(&e);
+        let treasury_client = TreasuryClient::new(&e, &treasury);
         let bridge_oracle = BridgeOracleClient::new(&e, &storage::get_bridge_oracle(&e));
-        let token_asset = Asset { //TODO: Check this
-            Stellar: token.clone()
-        };
+        let token_asset = Asset::Stellar(token.clone());
+        let token_client = token::StellarAssetClient::new(&e, &token);
+
         bridge_oracle.add_asset(&token_asset, &asset);
-        treasury.add_stablecoin(&token, &blend_pool);
-        treasury.increase_supply(&token, &initial_supply);
+        treasury_client.add_stablecoin(&token, &blend_pool);
+        token_client.set_admin(&treasury);
+        treasury_client.increase_supply(&token, &initial_supply);
     }
 
     fn update_pegkeeper(e: Env, pegkeeper: Address) {
@@ -132,13 +134,13 @@ impl Admin for AdminContract {
         PoolClient::new(&e, &pool).update_pool(&backstop_take_rate, &max_positions);
     }
 
-    fn set_reserve(e: Env, pool: Address, asset: Address, metadata: ReserveConfig) {
+    fn set_reserve(e: Env, pool: Address, asset: Address, metadata: ReserveConfig) -> u32 {
         storage::extend_instance(&e);
         let admin = storage::get_admin(&e);
         admin.require_auth();
         let pool_client = PoolClient::new(&e, &pool);
         pool_client.queue_set_reserve(&asset, &metadata);
-        pool_client.set_reserve(&asset);
+        pool_client.set_reserve(&asset)
     }
 
     fn set_emissions_config(e: Env, pool: Address, res_emission_metadata: Vec<ReserveEmissionMetadata>) {

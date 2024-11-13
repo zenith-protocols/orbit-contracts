@@ -1,4 +1,4 @@
-use soroban_sdk::{contract, contractclient, contractimpl, panic_with_error, token, Address, Env, IntoVal};
+use soroban_sdk::{contract, contractclient, contractimpl, panic_with_error, Address, Env, IntoVal};
 use crate::errors::MockPegkeeperError;
 use crate::{helper, storage};
 

@@ -1,9 +1,7 @@
 #![cfg(test)]
 use cast::i128;
 use soroban_fixed_point_math::FixedPoint;
-use soroban_sdk::{
-    log, testutils::{Address as AddressTestTrait, Events, Logs}, vec, Address, Error, IntoVal, Symbol, Val, Vec
-};
+use soroban_sdk::{log, symbol_short, testutils::{Address as AddressTestTrait, Events, Logs}, vec, Address, Error, IntoVal, Symbol, Val, Vec};
 use test_suites::{
     dependencies::pool::{Request, RequestType, Positions, PoolDataKey, ReserveConfig, ReserveData},
     assertions::assert_approx_eq_abs,
@@ -12,8 +10,8 @@ use test_suites::{
 };
 
 #[test]
-fn test_liquidations() {
-    let mut fixture = create_fixture_with_data(true);
+fn test_liquidations_mock() {
+    let mut fixture = create_fixture_with_data(true, true);
 
     let initial_xlm_amount = 10_000_000_000_00 * SCALAR_7; // Assuming 1 XLM
     let initial_ousd_amount = (initial_xlm_amount as f64 * 0.088) as i128;
@@ -91,10 +89,10 @@ fn test_liquidations() {
 }
 
 #[test]
-fn test_liquidations_real() {
-    let mut fixture = create_fixture_with_data(false);
+fn test_liquidations() {
+    let mut fixture = create_fixture_with_data(false, false);
 
-    let initial_xlm_amount = 10_000_000_000_00 * SCALAR_7; // Assuming 1 XLM
+    let initial_xlm_amount = 10_000_000_000_00 * SCALAR_7;
     let initial_ousd_amount = (initial_xlm_amount as f64 * 0.088) as i128;
     fixture.create_pair(TokenIndex::OUSD, TokenIndex::XLM, initial_ousd_amount, initial_xlm_amount);
 
@@ -133,28 +131,45 @@ fn test_liquidations_real() {
         &fixture.env,
         1_0000000,    // usdc
         0_0880000,    // xlm
+        1_0000000,    // USD
+        1_1000000,    // EURO
+        1_2000000,    // GBP
     ]);
-
-    // Create the token pair with initial supply.
-
-    let pegkeeper = &fixture.pegkeeper;
-
     let liq_pct = 100;
     let auction_data = pool_fixture
         .pool
         .new_liquidation_auction(&henk, &liq_pct);
 
-    let ousd_bid_amount = auction_data.bid.get_unchecked(fixture.tokens[TokenIndex::OUSD].address.clone());
-    let xlm_lot_amount = auction_data.lot.get_unchecked(fixture.tokens[TokenIndex::XLM].address.clone());
+
+
+    let token = fixture.tokens[TokenIndex::OUSD].address.clone();
+    let amount = auction_data.bid.get_unchecked(fixture.tokens[TokenIndex::OUSD].address.clone());
+    let blend_pool = pool_fixture.pool.address.clone();
+    let auction = henk.clone();
+    let collateral_token = fixture.tokens[TokenIndex::XLM].address.clone();
+    let lot_amount = auction_data.lot.get_unchecked(collateral_token.clone());
+    let amm = fixture.pairs[0].address.clone();
 
     //allow 250 blocks to pass
     fixture.jump_with_sequence(251 * 5);
 
-    let pair = &fixture.pairs[0];
     let piet = Address::generate(&fixture.env);
+    let args: Vec<Val> = vec![
+        &fixture.env,
+        token.into_val(&fixture.env),
+        amount.into_val(&fixture.env),
+        blend_pool.into_val(&fixture.env),
+        auction.into_val(&fixture.env),
+        collateral_token.into_val(&fixture.env),
+        lot_amount.into_val(&fixture.env),
+        liq_pct.into_val(&fixture.env),
+        amm.into_val(&fixture.env),
+        piet.into_val(&fixture.env),
+    ];
 
-    treasury.keep_peg(&piet, &henk, &fixture.tokens[TokenIndex::OUSD].address.clone(), &fixture.tokens[TokenIndex::XLM].address.clone(), &ousd_bid_amount, &xlm_lot_amount,  &(100 as i128), &pair.address.clone());
+    treasury.keep_peg(&Symbol::new(&fixture.env, "fl_receive"), &args.clone());
 
+    let pegkeeper = &fixture.pegkeeper;
     std::println!("OUSD Balance: {}", fixture.tokens[TokenIndex::OUSD].balance(&pegkeeper.address.clone()) / SCALAR_7);
     std::println!("XLM Balance: {}", fixture.tokens[TokenIndex::XLM].balance(&pegkeeper.address.clone()));
 

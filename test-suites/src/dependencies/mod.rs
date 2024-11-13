@@ -13,3 +13,4 @@ pub mod router;
 pub mod mock_treasury;
 pub mod mock_pegkeeper;
 pub mod pegkeeper;
+pub mod admin;

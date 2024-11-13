@@ -1,4 +1,4 @@
-use sep_40_oracle::{Asset, PriceData};
+pub use sep_40_oracle::{Asset, PriceData};
 use soroban_sdk::{contract, contractclient, contractimpl, vec, Address, Env, Symbol, Vec, Val, IntoVal, panic_with_error};
 use crate::error::BridgeOracleError;
 use crate::storage;

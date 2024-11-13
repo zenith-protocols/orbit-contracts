@@ -3,5 +3,7 @@
 mod contract;
 mod storage;
 mod error;
-mod dependencies;
+pub mod dependencies;
 
+pub use contract::*;
+pub use dependencies::pool::*;
