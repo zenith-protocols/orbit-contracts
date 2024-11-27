@@ -8,8 +8,6 @@ use crate::dependencies::{
 use crate::storage;
 
 pub fn liquidate(e: &Env, auction_creator: Address, token_a: Address, token_a_bid_amount: i128, token_b: Address, token_b_lot_amount: i128, blend_pool: Address, liq_amount: i128) {
-  storage::extend_instance(e);
-
   let fill_requests = vec![
       e,
       Request {
@@ -51,8 +49,6 @@ pub fn liquidate(e: &Env, auction_creator: Address, token_a: Address, token_a_bi
 }
 
 pub fn swap(e: &Env, pair: Address, token_a: Address, token_b: Address, amount_a: i128, amount_b: i128) {
-  storage::extend_instance(e);
-
   let router = storage::get_router(e);
   let router_client = RouterClient::new(e, &router);
 

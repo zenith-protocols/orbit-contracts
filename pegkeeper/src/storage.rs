@@ -1,7 +1,6 @@
 use soroban_sdk::{Address, Env, unwrap::UnwrapOptimized, contracttype};
 
 const ONE_DAY_LEDGERS: u32 = 17280; // assumes 5s a ledger
-
 const LEDGER_THRESHOLD_INSTANCE: u32 = ONE_DAY_LEDGERS * 30; // ~ 30 days
 const LEDGER_BUMP_INSTANCE: u32 = LEDGER_THRESHOLD_INSTANCE + ONE_DAY_LEDGERS; // ~ 31 days
 

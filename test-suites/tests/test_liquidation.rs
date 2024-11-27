@@ -9,7 +9,7 @@ use test_suites::{
 
 #[test]
 fn test_liquidations_mock() {
-    let mut fixture = create_fixture_with_data(true, true);
+    let mut fixture = create_fixture_with_data(true, false);
 
     let initial_xlm_amount = 10_000_000_000_00 * SCALAR_7; // Assuming 1 XLM
     let initial_ousd_amount = (initial_xlm_amount as f64 * 0.088) as i128;

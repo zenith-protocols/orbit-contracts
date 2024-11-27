@@ -1,4 +1,4 @@
-use soroban_sdk::{contract, contractclient, contractimpl, panic_with_error, Address, Env, IntoVal};
+use soroban_sdk::{contract, contractclient, contractimpl, panic_with_error, Address, Env, IntoVal, Symbol};
 use crate::errors::MockPegkeeperError;
 use crate::{helper, storage};
 
@@ -18,16 +18,9 @@ pub trait MockPegkeepeer {
     /// Execute operation
     ///
     /// ### Arguments
-    /// * `fee_taker` - The Address for the fee taker
-    /// * `auction` - The Address for the blend auction
-    /// * `token` - The Address for the treasury token
-    /// * `collateral_token` - The Address for the collateral token
-    /// * `bid_amount` - The amount of the bid
-    /// * `lot_amount` - The amount of the lot
-    /// * `liq_amount` - The amount of the liquidation
-    /// * `blend_pool` - The Address for the blend pool
-    /// * `amm` - The Address for the AMM
-    fn fl_receive(e: Env, fee_taker: Address, auction: Address, token: Address, collateral_token: Address, bid_amount: i128, lot_amount: i128, liq_amount: i128, blend_pool: Address, amm: Address);
+    /// * `token` - The Address for the token
+    /// * `amount` - The amount received of the token
+    fn fl_receive(e: Env, token: Address, amount: i128);
 
     /// Liquidate
     ///
@@ -63,18 +56,24 @@ impl MockPegkeepeer for MockPegkeeperContract {
 
         storage::set_router(&e, &router);
         storage::set_admin(&e, &admin);
+
+        e.events().publish(("Pegkeeper", Symbol::new(&e, "init")), (admin.clone(), router.clone()));
     }
-    fn fl_receive(e: Env, fee_taker: Address, auction: Address, token: Address, collateral_token: Address, bid_amount: i128, lot_amount: i128, liq_amount: i128, blend_pool: Address, amm: Address) {
+    fn fl_receive(e: Env, token: Address, amount: i128) {
         storage::extend_instance(&e);
 
         let admin = storage::get_admin(&e);
         admin.require_auth();
+
+        e.events().publish(("Pegkeeper", Symbol::new(&e, "init")), (token.clone(), amount.clone()));
     }
 
     fn liquidate(e: Env, auction: Address, token: Address, bid_amount: i128, collateral_token: Address, lot_amount: i128, blend_pool: Address, liq_amount: i128) {
         storage::extend_instance(&e);
 
         helper::liquidate(&e, auction, token.clone(), bid_amount.clone(), collateral_token.clone(), lot_amount.clone(), blend_pool.clone(), liq_amount.clone());
+
+        e.events().publish(("Pegkeeper", Symbol::new(&e, "liquidate")), ());
     }
 
     fn swap(e: Env, amm: Address, token: Address, collateral_token: Address, lot_amount: i128, fee: i128) {
