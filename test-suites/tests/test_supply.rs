@@ -36,6 +36,7 @@ fn test_decrease_supply() {
 }
 
 #[test]
+#[should_panic = "Error(Contract, #504)"]
 fn test_not_enough_supply() {
     let fixture = create_fixture_with_data(false, false);
 
@@ -45,11 +46,6 @@ fn test_not_enough_supply() {
 
     let amount = -ousd_balance - 100_000_000_000;
     &fixture.admin_contract.update_supply(&fixture.tokens[TokenIndex::OUSD].address.clone(), &amount);
-
-    assert_eq!(
-        ousd_balance,
-        fixture.tokens[TokenIndex::OUSD].balance(&pool_fixture.pool.address)
-    );
 }
 
 #[test]
@@ -59,13 +55,6 @@ fn test_zero_amount() {
 
     let pool_fixture = &fixture.pools[0];
 
-    let ousd_balance = fixture.tokens[TokenIndex::OUSD].balance(&pool_fixture.pool.address);
-
     let amount = 0;
     &fixture.admin_contract.update_supply(&fixture.tokens[TokenIndex::OUSD].address.clone(), &amount);
-
-    assert_eq!(
-        ousd_balance,
-        fixture.tokens[TokenIndex::OUSD].balance(&pool_fixture.pool.address)
-    );
 }

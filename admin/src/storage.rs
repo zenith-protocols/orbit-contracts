@@ -10,7 +10,7 @@ const LEDGER_BUMP_INSTANCE: u32 = LEDGER_THRESHOLD_INSTANCE + ONE_DAY_LEDGERS; /
 #[contracttype]
 pub enum AdminDataKey {
     ADMIN,
-    BRIDGE_ORACLE,
+    BRIDGEORACLE,
     TREASURY,
 }
 
@@ -38,14 +38,14 @@ pub fn set_admin(e: &Env, new_admin: &Address) {
 pub fn get_bridge_oracle(env: &Env) -> Address {
     env.storage()
         .instance()
-        .get(&AdminDataKey::BRIDGE_ORACLE)
+        .get(&AdminDataKey::BRIDGEORACLE)
         .unwrap_optimized()
 }
 
 pub fn set_bridge_oracle(env: &Env, address: &Address) {
     env.storage()
         .instance()
-        .set(&AdminDataKey::BRIDGE_ORACLE, address);
+        .set(&AdminDataKey::BRIDGEORACLE, address);
 }
 
 pub fn get_treasury(env: &Env) -> Address {

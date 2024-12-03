@@ -70,7 +70,15 @@ fn test_liquidations_mock() {
 
     let pair = &fixture.pairs[0];
 
-    treasury.keep_peg(&piet, &henk, &fixture.tokens[TokenIndex::OUSD].address.clone(), &fixture.tokens[TokenIndex::XLM].address.clone(), &ousd_bid_amount, &xlm_lot_amount,  &(100 as i128), &pair.address.clone());
+    let token = fixture.tokens[TokenIndex::OUSD].address.clone();
+    let args: Vec<Val> = vec![
+        &fixture.env,
+        token.into_val(&fixture.env),
+        ousd_bid_amount.into_val(&fixture.env),
+    ];
+    let fl_receive_sym = Symbol::new(&fixture.env, "fl_receive");
+
+    treasury.keep_peg(&fl_receive_sym, &args.clone());
 
     std::println!("OUSD Balance: {}", fixture.tokens[TokenIndex::OUSD].balance(&pegkeeper.address.clone()) / SCALAR_7);
     std::println!("XLM Balance: {}", fixture.tokens[TokenIndex::XLM].balance(&pegkeeper.address.clone()));

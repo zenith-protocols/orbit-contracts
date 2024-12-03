@@ -7,4 +7,5 @@ pub enum TreasuryError {
     AlreadyInitializedError = 501,
     InvalidAmount = 502,
     FlashloanFailedError = 503,
+    NotEnoughSupplyError = 504,
 }

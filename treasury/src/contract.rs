@@ -145,6 +145,9 @@ impl Treasury for TreasuryContract {
             panic_with_error!(e, TreasuryError::InvalidAmount);
         }
 
+        let token_client = token::TokenClient::new(&e, &token);
+        let balance = token_client.balance(&e.current_contract_address());
+
         let blend = storage::get_blend_pool(&e, &token);
         PoolClient::new(&e, &blend).submit(&e.current_contract_address(), &e.current_contract_address(), &e.current_contract_address(), &vec![
             &e,
@@ -154,6 +157,11 @@ impl Treasury for TreasuryContract {
                 amount,
             },
         ]);
+
+        let balance_after = token_client.balance(&e.current_contract_address());
+        if (balance_after - balance) < amount {
+            panic_with_error!(e, TreasuryError::NotEnoughSupplyError);
+        }
 
         token::TokenClient::new(&e, &token).burn(&e.current_contract_address(), &amount);
         e.events().publish(("Treasury", Symbol::new(&e, "decrease_supply")), (token.clone(), amount.clone()));
