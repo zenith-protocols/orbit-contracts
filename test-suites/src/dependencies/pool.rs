@@ -1,5 +1,3 @@
-use soroban_sdk;
-
 pub use admin::dependencies::pool::{Client as PoolClient, ReserveConfig, Positions, PoolDataKey, ReserveData, ReserveEmissionsData, ReserveEmissionsConfig, PoolConfig,  Request, ReserveEmissionMetadata, Reserve, WASM as POOL_WASM};
 
 #[derive(Clone, PartialEq)]
@@ -15,20 +13,4 @@ pub enum RequestType {
     FillBadDebtAuction = 7,
     FillInterestAuction = 8,
     DeleteLiquidationAuction = 9,
-}
-
-pub fn default_reserve_metadata() -> ReserveConfig {
-    ReserveConfig {
-        decimals: 7,
-        c_factor: 0_7500000,
-        l_factor: 0_7500000,
-        util: 0_7500000,
-        max_util: 0_9500000,
-        r_base: 0_0100000,
-        r_one: 0_0500000,
-        r_two: 0_5000000,
-        r_three: 1_5000000,
-        reactivity: 0_0000020, // 2e-6
-        index: 0,
-    }
 }

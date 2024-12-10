@@ -1,5 +1,4 @@
 #![cfg(test)]
-use cast::i128;
 use soroban_sdk::{testutils::{Address as AddressTestTrait}, vec, Address, IntoVal, Symbol, Val, Vec};
 use test_suites::{
     dependencies::pool::{Request, RequestType},
@@ -187,7 +186,7 @@ fn test_pegkeeper() {
 }
 
 #[test]
-#[should_panic(expected = "Error(Contract, #1302)")]
+#[should_panic(expected = "Error(Contract, #505)")]
 fn test_pegkeeper_no_profit() {
     let mut fixture = create_fixture_with_data(false, false);
 

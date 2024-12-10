@@ -5,5 +5,5 @@ use soroban_sdk::{self, contracterror};
 #[repr(u32)]
 pub enum PegkeeperError {
     AlreadyInitializedError = 501,
-    NotProfitable = 502,
+    NotProfitable = 505,
 }

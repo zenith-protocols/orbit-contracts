@@ -7,6 +7,7 @@ mod contract;
 mod errors;
 mod helper;
 mod dependencies;
+#[cfg(test)]
 mod test;
 
 pub use contract::*;

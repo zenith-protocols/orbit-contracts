@@ -7,7 +7,7 @@ use crate::dependencies::liquidity_pool::{create_lp_pool, LPClient};
 use crate::dependencies::oracle::create_mock_oracle;
 use crate::dependencies::pool::POOL_WASM;
 use crate::dependencies::pool_factory::create_pool_factory;
-use crate::dependencies::token::{create_stellar_token, create_token};
+use crate::dependencies::token::{create_stellar_token};
 use crate::dependencies::backstop::BackstopClient;
 use crate::dependencies::emitter::EmitterClient;
 use crate::dependencies::pool::{
@@ -106,9 +106,9 @@ impl TestFixture<'_> {
         let (blnd_id, blnd_client) = create_stellar_token(&e, &admin);
         let (usdc_id, usdc_client) = create_stellar_token(&e, &admin);
         let (xlm_id, xlm_client) = create_stellar_token(&e, &admin);
-        let (ousd_id, ousd_client) = create_stellar_token(&e, &admin);
-        let (oeuro_id, oeuro_client) = create_stellar_token(&e, &admin);
-        let (ogbp_id, ogbp_client) = create_stellar_token(&e, &admin);
+        let (_, ousd_client) = create_stellar_token(&e, &admin);
+        //let (oeuro_id, oeuro_client) = create_stellar_token(&e, &admin);
+        //let (ogbp_id, ogbp_client) = create_stellar_token(&e, &admin);
 
         // deploy Blend Protocol dependencies
         let (backstop_id, backstop_client) = create_backstop(&e);

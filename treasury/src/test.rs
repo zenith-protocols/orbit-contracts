@@ -1,11 +1,11 @@
 #[cfg(test)]
 
-use soroban_sdk::{testutils::Address as _, Address, Env, IntoVal, Symbol, vec as svec, symbol_short};
+use soroban_sdk::{testutils::Address as _, Address, Env, IntoVal, Symbol};
 use soroban_sdk::testutils::{AuthorizedFunction, AuthorizedInvocation};
 use crate::{TreasuryContract, TreasuryClient};
 
 #[test]
-#[should_panic(expected = "Error(Contract, #3)")] // AlreadyInitializedError = 3
+#[should_panic(expected = "Error(Contract, #501)")] // AlreadyInitializedError
 fn test_initialization() {
     let env: Env = Default::default();
     env.mock_all_auths();

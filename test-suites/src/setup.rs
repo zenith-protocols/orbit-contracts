@@ -1,7 +1,7 @@
-use soroban_sdk::{log, testutils::{Address as _, Logs, MockAuth, MockAuthInvoke}, vec as svec, Address, String, Symbol, Env, Vec as SVec};
+use soroban_sdk::{testutils::{Address as _}, vec as svec, Address, String, Symbol};
 
 use crate::{
-    dependencies::pool::{default_reserve_metadata, Request, RequestType, ReserveEmissionMetadata},
+    dependencies::pool::{ReserveEmissionMetadata},
     test_fixture::{TestFixture, TokenIndex, SCALAR_7},
 };
 use admin::dependencies::bridge_oracle::Asset;
@@ -113,6 +113,7 @@ pub fn create_fixture_with_data<'a>(mock: bool, wasm: bool) -> TestFixture<'a> {
 
 #[cfg(test)]
 mod tests {
+    use crate::dependencies::pool::{Request, RequestType};
     use crate::test_fixture::PoolFixture;
 
     use super::*;
@@ -120,7 +121,7 @@ mod tests {
     #[test]
     fn test_create_fixture_with_data_wasm_mock() {
         let fixture: TestFixture<'_> = create_fixture_with_data(true, true);
-        let frodo: &Address = fixture.users.get(0).unwrap();
+        //let frodo: &Address = fixture.users.get(0).unwrap();
         let pool_fixture: &PoolFixture = fixture.pools.get(0).unwrap();
 
         // validate backstop deposit and drop
@@ -169,7 +170,7 @@ mod tests {
     #[test]
     fn test_create_fixture_with_data_mock() {
         let fixture: TestFixture<'_> = create_fixture_with_data(true, false);
-        let frodo: &Address = fixture.users.get(0).unwrap();
+        //let frodo: &Address = fixture.users.get(0).unwrap();
         let pool_fixture: &PoolFixture = fixture.pools.get(0).unwrap();
 
         // validate backstop deposit and drop
@@ -218,7 +219,7 @@ mod tests {
     #[test]
     fn test_create_fixture_with_data_wasm() {
         let fixture: TestFixture<'_> = create_fixture_with_data(false, true);
-        let frodo: &Address = fixture.users.get(0).unwrap();
+        //let frodo: &Address = fixture.users.get(0).unwrap();
         let pool_fixture: &PoolFixture = fixture.pools.get(0).unwrap();
 
         // validate backstop deposit and drop
@@ -267,7 +268,7 @@ mod tests {
     #[test]
     fn test_create_fixture_with_data() {
         let fixture: TestFixture<'_> = create_fixture_with_data(false, false);
-        let frodo: &Address = fixture.users.get(0).unwrap();
+        //let frodo: &Address = fixture.users.get(0).unwrap();
         let pool_fixture: &PoolFixture = fixture.pools.get(0).unwrap();
 
         // validate backstop deposit and drop

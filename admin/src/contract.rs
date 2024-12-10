@@ -1,4 +1,4 @@
-use soroban_sdk::{contract, contractclient, contractimpl, Address, Env, Vec, IntoVal, panic_with_error, token};
+use soroban_sdk::{contract, contractclient, contractimpl, Address, Env, Vec, panic_with_error, token};
 use crate::error::AdminError;
 use crate::storage;
 use crate::dependencies::pool::{Client as PoolClient, ReserveConfig, ReserveEmissionMetadata};
