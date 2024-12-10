@@ -55,7 +55,6 @@ fn test_liquidations_mock() {
     // Create the token pair with initial supply.
 
     let pegkeeper = &fixture.mock_pegkeeper;
-    let piet = Address::generate(&fixture.env);
 
     let liq_pct = 100;
     let auction_data = pool_fixture

@@ -7,4 +7,6 @@ mod contract;
 mod errors;
 mod helper;
 mod dependencies;
+mod test;
+
 pub use contract::*;

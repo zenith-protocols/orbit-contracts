@@ -5,5 +5,6 @@ mod storage;
 mod contract;
 mod errors;
 mod dependencies;
+mod test;
 
 pub use contract::*;

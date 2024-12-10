@@ -1,4 +1,5 @@
 #[cfg(test)]
+
 use sep_40_oracle::Asset;
 use sep_40_oracle::testutils::{MockPriceOracleClient, MockPriceOracleWASM};
 use sep_40_oracle::testutils::Asset as TestAsset;
@@ -15,7 +16,7 @@ pub(crate) fn create_mock_oracle(e: &Env) -> (Address, MockPriceOracleClient) {
 }
 
 #[test]
-#[should_panic(expected = "Error(Contract, #3)")] // AlreadyInitializedError = 3
+#[should_panic(expected = "Error(Contract, #501)")] // AlreadyInitializedError
 fn test_initialization() {
     let env: Env = Default::default();
     env.mock_all_auths();
