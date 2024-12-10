@@ -1,4 +1,4 @@
-use soroban_sdk::{contract, contractclient, contractimpl, Address, Env, Vec, panic_with_error, token};
+use soroban_sdk::{contract, contractclient, contractimpl, Address, Env, Vec, panic_with_error};
 use crate::error::AdminError;
 use crate::storage;
 use crate::dependencies::pool::{Client as PoolClient, ReserveConfig, ReserveEmissionMetadata};
@@ -25,15 +25,15 @@ pub trait Admin {
     /// * `initial_supply` - The initial supply of the new token lended to the blend pool
     fn new_stablecoin(e: Env, token: Address, asset: Asset, blend_pool: Address, initial_supply: i128);
 
-    /// Updates the pegkeeper
+    /// Set the pegkeeper
     /// # Arguments
     /// * `pegkeeper` - The address of the pegkeeper
-    fn update_pegkeeper(e: Env, pegkeeper: Address);
+    fn set_pegkeeper(e: Env, pegkeeper: Address);
 
-    /// Updates the oracle
+    /// Set the oracle
     /// # Arguments
     /// * `oracle` - The address of the oracle
-    fn update_oracle(e: Env, oracle: Address);
+    fn set_oracle(e: Env, oracle: Address);
 
     /// Updates the supply of a token
     /// # Arguments
@@ -96,15 +96,13 @@ impl Admin for AdminContract {
         let treasury_client = TreasuryClient::new(&e, &treasury);
         let bridge_oracle = BridgeOracleClient::new(&e, &storage::get_bridge_oracle(&e));
         let token_asset = Asset::Stellar(token.clone());
-        let token_client = token::StellarAssetClient::new(&e, &token);
 
         bridge_oracle.add_asset(&token_asset, &asset);
         treasury_client.add_stablecoin(&token, &blend_pool);
-        token_client.set_admin(&treasury);
         treasury_client.increase_supply(&token, &initial_supply);
     }
 
-    fn update_pegkeeper(e: Env, pegkeeper: Address) {
+    fn set_pegkeeper(e: Env, pegkeeper: Address) {
         storage::extend_instance(&e);
         let admin = storage::get_admin(&e);
         admin.require_auth();
@@ -112,7 +110,7 @@ impl Admin for AdminContract {
         treasury.set_pegkeeper(&pegkeeper);
     }
 
-    fn update_oracle(e: Env, oracle: Address) {
+    fn set_oracle(e: Env, oracle: Address) {
         storage::extend_instance(&e);
         let admin = storage::get_admin(&e);
         admin.require_auth();
