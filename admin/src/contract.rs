@@ -1,4 +1,4 @@
-use soroban_sdk::{contract, contractclient, contractimpl, vec, Address, Env, Symbol, Vec, Val, IntoVal, panic_with_error, token};
+use soroban_sdk::{contract, contractclient, contractimpl, Address, Env, Vec, IntoVal, panic_with_error, token};
 use crate::error::AdminError;
 use crate::storage;
 use crate::dependencies::pool::{Client as PoolClient, ReserveConfig, ReserveEmissionMetadata};
@@ -66,6 +66,11 @@ pub trait Admin {
     /// * `pool` - The address of the blend pool
     /// * `pool_status` - The status of the blend pool
     fn set_status(e: Env, pool: Address, pool_status: u32);
+
+    /// Sets the admin address
+    /// # Arguments
+    /// * `admin` - The address of the new admin
+    fn set_admin(e: Env, admin: Address);
 
 }
 
@@ -155,5 +160,12 @@ impl Admin for AdminContract {
         let admin = storage::get_admin(&e);
         admin.require_auth();
         PoolClient::new(&e, &pool).set_status(&pool_status);
+    }
+
+    fn set_admin(e: Env, admin: Address) {
+        storage::extend_instance(&e);
+        let current_admin = storage::get_admin(&e);
+        current_admin.require_auth();
+        storage::set_admin(&e, &admin);
     }
 }
