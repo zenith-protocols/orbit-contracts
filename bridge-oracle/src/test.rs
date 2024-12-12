@@ -16,7 +16,7 @@ pub(crate) fn create_mock_oracle(e: &Env) -> (Address, MockPriceOracleClient) {
 }
 
 #[test]
-#[should_panic(expected = "Error(Contract, #501)")] // AlreadyInitializedError
+#[should_panic(expected = "Error(Contract, #1501)")] // AlreadyInitializedError
 fn test_initialization() {
     let env: Env = Default::default();
     env.mock_all_auths();

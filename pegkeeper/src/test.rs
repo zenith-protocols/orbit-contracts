@@ -4,7 +4,7 @@ use soroban_sdk::{testutils::Address as _, Address, Env};
 use crate::{PegkeeperContract, PegkeeperClient};
 
 #[test]
-#[should_panic(expected = "Error(Contract, #501)")] // AlreadyInitializedError = 3
+#[should_panic(expected = "Error(Contract, #1501)")] // AlreadyInitializedError
 fn test_initialization() {
     let env: Env = Default::default();
     env.mock_all_auths();

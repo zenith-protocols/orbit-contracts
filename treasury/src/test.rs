@@ -5,7 +5,7 @@ use soroban_sdk::testutils::{AuthorizedFunction, AuthorizedInvocation};
 use crate::{TreasuryContract, TreasuryClient};
 
 #[test]
-#[should_panic(expected = "Error(Contract, #501)")] // AlreadyInitializedError
+#[should_panic(expected = "Error(Contract, #1501)")] // AlreadyInitializedError
 fn test_initialization() {
     let env: Env = Default::default();
     env.mock_all_auths();

@@ -50,6 +50,16 @@ pub trait Admin {
     /// * `new_wasm_hash` - The new wasm hash
     fn upgrade(e: Env, new_wasm_hash: BytesN<32>);
 
+    /// Updates the treasury contract to a new version
+    /// # Arguments
+    /// * `new_wasm_hash` - The new wasm hash
+    fn upgrade_treasury(e: Env, new_wasm_hash: BytesN<32>);
+
+    /// Updates the bridge oracle contract to a new version
+    /// # Arguments
+    /// * `new_wasm_hash` - The new wasm hash
+    fn upgrade_bridge_oracle(e: Env, new_wasm_hash: BytesN<32>);
+
 }
 
 #[contractimpl]
@@ -121,5 +131,21 @@ impl Admin for AdminContract {
         admin.require_auth();
 
         e.deployer().update_current_contract_wasm(new_wasm_hash);
+    }
+
+    fn upgrade_treasury(e: Env, new_wasm_hash: BytesN<32>) {
+        storage::extend_instance(&e);
+        let admin = storage::get_admin(&e);
+        admin.require_auth();
+        let treasury = TreasuryClient::new(&e, &storage::get_treasury(&e));
+        treasury.upgrade(&new_wasm_hash);
+    }
+
+    fn upgrade_bridge_oracle(e: Env, new_wasm_hash: BytesN<32>) {
+        storage::extend_instance(&e);
+        let admin = storage::get_admin(&e);
+        admin.require_auth();
+        let bridge_oracle = BridgeOracleClient::new(&e, &storage::get_bridge_oracle(&e));
+        bridge_oracle.upgrade(&new_wasm_hash);
     }
 }

@@ -9,8 +9,6 @@ use crate::dependencies::pool::ReserveConfig;
 
 /// Create a test fixture with a pool and a whale depositing and borrowing all assets
 pub fn create_fixture_with_data<'a>(mock: bool, wasm: bool) -> TestFixture<'a> {
-    std::println!("===================================== Fixture Create With Data ===========================================");
-
     let mut fixture = TestFixture::create(mock, wasm);
 
     // mint whale tokens
@@ -32,32 +30,33 @@ pub fn create_fixture_with_data<'a>(mock: bool, wasm: bool) -> TestFixture<'a> {
         &frodo,
     );
 
-    fixture.create_pool(String::from_str(&fixture.env, "Teapot"), 0_9999999, 6);
+    fixture.create_pool(String::from_str(&fixture.env, "Teapot"), 2000000, 4);
+
+    let xlm_config = ReserveConfig {
+        decimals: 7,
+        c_factor: 7_500_000,
+        l_factor: 0,
+        util: 0,
+        max_util: 1_000_0000,
+        r_base: 40_0000,
+        r_one: 0,
+        r_two: 0,
+        r_three: 0,
+        reactivity: 0,
+        index: 0,
+    };
 
     let ousd_config = ReserveConfig {
         decimals: 7,
         c_factor: 0,
         l_factor: 1_000_0000,
-        util: 0_800_0000,
-        max_util: 1_000_0000,
-        r_base: 0_040_0000,
-        r_one: 0,
-        r_two: 0,
-        r_three: 0,
-        reactivity: 0, // 2e-5
-        index: 0,
-    };
-    let xlm_config = ReserveConfig {
-        decimals: 7,
-        c_factor: 0_890_0000,
-        l_factor: 0,
-        util: 0,
-        max_util: 1_000_0000,
-        r_base: 0_040_0000,
-        r_one: 0,
-        r_two: 0,
-        r_three: 0,
-        reactivity: 0,
+        util: 800_0000,
+        max_util: 950_0000,
+        r_base: 10_0000,
+        r_one: 50_0000,
+        r_two: 50_0000,
+        r_three: 50_0000,
+        reactivity: 40, // 2e-5
         index: 1,
     };
 
@@ -102,7 +101,12 @@ pub fn create_fixture_with_data<'a>(mock: bool, wasm: bool) -> TestFixture<'a> {
     let token: Address = fixture.tokens[TokenIndex::OUSD].address.clone();
     let asset: Asset = Asset::Other(Symbol::new(&fixture.env, "USD"));
     let initial_supply: i128 = 1_000_000 * SCALAR_7;
-    fixture.tokens[TokenIndex::OUSD].set_admin(&fixture.treasury.address);
+    if mock {
+        fixture.tokens[TokenIndex::OUSD].set_admin(&fixture.mock_treasury.address);
+    } else {
+        fixture.tokens[TokenIndex::OUSD].set_admin(&fixture.treasury.address);
+    }
+
     fixture.admin_contract.new_stablecoin(&token, &asset, &pool_fixture.pool.address, &initial_supply);
 
     fixture.jump(60 * 60); // 1 hr
@@ -170,7 +174,6 @@ mod tests {
     #[test]
     fn test_create_fixture_with_data_mock() {
         let fixture: TestFixture<'_> = create_fixture_with_data(true, false);
-        //let frodo: &Address = fixture.users.get(0).unwrap();
         let pool_fixture: &PoolFixture = fixture.pools.get(0).unwrap();
 
         // validate backstop deposit and drop

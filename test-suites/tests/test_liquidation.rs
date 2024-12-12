@@ -30,7 +30,7 @@ fn test_liquidations_mock() {
         Request {
             request_type: RequestType::Borrow as u32,
             address: fixture.tokens[TokenIndex::OUSD].address.clone(),
-            amount: 8_800 * SCALAR_7,
+            amount: 7_000 * SCALAR_7,
         },
     ];
     pool_fixture.pool.submit(&henk, &henk, &henk, &requests);
@@ -40,7 +40,7 @@ fn test_liquidations_mock() {
         fixture.tokens[TokenIndex::XLM].balance(&henk)
     );
     assert_eq!(
-        8_800 * SCALAR_7,
+        7_000 * SCALAR_7,
         fixture.tokens[TokenIndex::OUSD].balance(&henk)
     );
 
@@ -48,7 +48,10 @@ fn test_liquidations_mock() {
     fixture.oracle.set_price_stable(&vec![
         &fixture.env,
         1_0000000,    // usdc
-        0_0880000,    // xlm
+        0_0740000,    // xlm
+        1_0000000,    // USD
+        1_1000000,    // EURO
+        1_2000000,    // GBP
     ]);
 
     // Create the token pair with initial supply.
@@ -116,7 +119,7 @@ fn test_pegkeeper() {
         Request {
             request_type: RequestType::Borrow as u32,
             address: fixture.tokens[TokenIndex::OUSD].address.clone(),
-            amount: 8_800 * SCALAR_7,
+            amount: 7_000 * SCALAR_7,
         },
     ];
     pool_fixture.pool.submit(&henk, &henk, &henk, &requests);
@@ -126,7 +129,7 @@ fn test_pegkeeper() {
         fixture.tokens[TokenIndex::XLM].balance(&henk)
     );
     assert_eq!(
-        8_800 * SCALAR_7,
+        7_000 * SCALAR_7,
         fixture.tokens[TokenIndex::OUSD].balance(&henk)
     );
 
@@ -134,7 +137,7 @@ fn test_pegkeeper() {
     fixture.oracle.set_price_stable(&vec![
         &fixture.env,
         1_0000000,    // usdc
-        0_0880000,    // xlm
+        0_0740000,    // xlm
         1_0000000,    // USD
         1_1000000,    // EURO
         1_2000000,    // GBP
@@ -143,8 +146,6 @@ fn test_pegkeeper() {
     let auction_data = pool_fixture
         .pool
         .new_liquidation_auction(&henk, &liq_pct);
-
-
 
     let token = fixture.tokens[TokenIndex::OUSD].address.clone();
     let amount = auction_data.bid.get_unchecked(fixture.tokens[TokenIndex::OUSD].address.clone());
@@ -186,7 +187,7 @@ fn test_pegkeeper() {
 }
 
 #[test]
-#[should_panic(expected = "Error(Contract, #505)")]
+#[should_panic(expected = "Error(Contract, #1505)")]
 fn test_pegkeeper_no_profit() {
     let mut fixture = create_fixture_with_data(false, false);
 
@@ -210,7 +211,7 @@ fn test_pegkeeper_no_profit() {
         Request {
             request_type: RequestType::Borrow as u32,
             address: fixture.tokens[TokenIndex::OUSD].address.clone(),
-            amount: 8_800 * SCALAR_7,
+            amount: 7_000 * SCALAR_7,
         },
     ];
     pool_fixture.pool.submit(&henk, &henk, &henk, &requests);
@@ -220,7 +221,7 @@ fn test_pegkeeper_no_profit() {
         fixture.tokens[TokenIndex::XLM].balance(&henk)
     );
     assert_eq!(
-        8_800 * SCALAR_7,
+        7_000 * SCALAR_7,
         fixture.tokens[TokenIndex::OUSD].balance(&henk)
     );
 
@@ -228,7 +229,7 @@ fn test_pegkeeper_no_profit() {
     fixture.oracle.set_price_stable(&vec![
         &fixture.env,
         1_0000000,    // usdc
-        0_0880000,    // xlm
+        0_0740000,    // xlm
         1_0000000,    // USD
         1_1000000,    // EURO
         1_2000000,    // GBP
@@ -237,8 +238,6 @@ fn test_pegkeeper_no_profit() {
     let auction_data = pool_fixture
         .pool
         .new_liquidation_auction(&henk, &liq_pct);
-
-
 
     let token = fixture.tokens[TokenIndex::OUSD].address.clone();
     let amount = auction_data.bid.get_unchecked(fixture.tokens[TokenIndex::OUSD].address.clone());

@@ -1,6 +1,6 @@
 use crate::storage;
 use crate::dependencies::pool::{Client as PoolClient, Request};
-use soroban_sdk::{contract, contractclient, contractimpl, panic_with_error, token, vec, Address, Env, IntoVal, Symbol, TryFromVal, Val, Vec};
+use soroban_sdk::{contract, contractclient, contractimpl, panic_with_error, token, vec, Address, BytesN, Env, IntoVal, Symbol, TryFromVal, Val, Vec};
 use soroban_sdk::auth::{ContractContext, InvokerContractAuthEntry, SubContractInvocation};
 use crate::errors::TreasuryError;
 
@@ -68,6 +68,11 @@ pub trait Treasury {
     /// ### Panics
     /// If the caller is not the admin
     fn set_pegkeeper(e: Env, pegkeeper: Address);
+
+    /// Updates this contract to a new version
+    /// # Arguments
+    /// * `new_wasm_hash` - The new wasm hash
+    fn upgrade(e: Env, new_wasm_hash: BytesN<32>);
 }
 
 #[contractimpl]
@@ -208,5 +213,13 @@ impl Treasury for TreasuryContract {
         storage::set_pegkeeper(&e, &new_pegkeeper);
 
         e.events().publish(("Treasury", Symbol::new(&e, "set_pegkeeper")), new_pegkeeper.clone());
+    }
+
+    fn upgrade(e: Env, new_wasm_hash: BytesN<32>) {
+        storage::extend_instance(&e);
+        let admin = storage::get_admin(&e);
+        admin.require_auth();
+
+        e.deployer().update_current_contract_wasm(new_wasm_hash);
     }
 }

@@ -36,7 +36,7 @@ fn test_decrease_supply() {
 }
 
 #[test]
-#[should_panic = "Error(Contract, #504)"]
+#[should_panic = "Error(Contract, #1504)"]
 fn test_not_enough_supply() {
     let fixture = create_fixture_with_data(false, false);
 
@@ -49,7 +49,7 @@ fn test_not_enough_supply() {
 }
 
 #[test]
-#[should_panic = "Error(Contract, #502)"]
+#[should_panic = "Error(Contract, #1502)"]
 fn test_zero_amount() {
     let fixture = create_fixture_with_data(false, false);
 

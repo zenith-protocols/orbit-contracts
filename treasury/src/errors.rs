@@ -4,8 +4,8 @@ use soroban_sdk::contracterror;
 #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
 #[repr(u32)]
 pub enum TreasuryError {
-    AlreadyInitializedError = 501,
-    InvalidAmount = 502,
-    FlashloanFailedError = 503,
-    NotEnoughSupplyError = 504,
+    AlreadyInitializedError = 1501,
+    InvalidAmount = 1502,
+    FlashloanFailedError = 1503,
+    NotEnoughSupplyError = 1504,
 }

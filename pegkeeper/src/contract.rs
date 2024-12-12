@@ -22,8 +22,8 @@ pub trait Pegkeeper {
     /// * `blend_pool` - The Address for the blend pool
     /// * `auction` - The Address for the auction
     /// * `collateral_token` - The Address for the collateral token
-    /// * `lot_amount` - The amount of the collateral token
-    /// * `liq_amount` - The amount to liquidate
+    /// * `lot_amount` - The amount of the collateral token to withdraw after liquidation
+    /// * `liq_amount` - The amount to liquidate in percentage 0-100
     /// * `amm` - The Address for the AMM
     /// * `fee_taker` - The Address for the fee taker
     fn fl_receive(e: Env, token: Address, amount: i128, blend_pool: Address, auction: Address, collateral_token: Address, lot_amount: i128, liq_amount: i128, amm: Address, fee_taker: Address);
@@ -51,9 +51,15 @@ impl Pegkeeper for PegkeeperContract {
         admin.require_auth();
 
         let token_client = token::Client::new(&e, &token);
+        let collateral_client = token::Client::new(&e, &collateral_token);
         let balance_before = token_client.balance(&e.current_contract_address());
+        let collateral_balance = collateral_client.balance(&e.current_contract_address());
 
         helper::liquidate(&e, auction, token.clone(), amount.clone(), collateral_token.clone(), lot_amount.clone(), blend_pool.clone(), liq_amount.clone());
+
+        let collateral_balance_after = collateral_client.balance(&e.current_contract_address());
+        let lot_amount = collateral_balance_after - collateral_balance;
+
         helper::swap(&e, amm, collateral_token.clone(), token.clone(), lot_amount.clone(), 0);
 
         let balance_after = token_client.balance(&e.current_contract_address());

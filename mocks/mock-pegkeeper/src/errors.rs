@@ -4,10 +4,6 @@ use soroban_sdk::{self, contracterror};
 #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
 #[repr(u32)]
 pub enum MockPegkeeperError {
-    /// not yet initialized
-    NotInitialized = 101,
-
-    /// already initialized
-    AlreadyInitializedError = 102,
-    NotProfitable = 103,
+    AlreadyInitializedError = 1501,
+    NotProfitable = 1505,
 }
