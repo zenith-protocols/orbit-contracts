@@ -1,13 +1,11 @@
 use soroban_sdk::{testutils::Address as _, Address, Env};
 mod admin_contract {
-    use admin::Asset;
-    use admin::ReserveConfig;
-    use admin::ReserveEmissionMetadata;
+    use::bridge_oracle::Asset;
 
     soroban_sdk::contractimport!(file = "../wasm/orbit/admin.wasm");
 }
 
-pub use admin::{AdminClient, AdminContract, ReserveConfig, ReserveEmissionMetadata, Asset};
+pub use admin::{AdminClient, AdminContract};
 
 pub fn create_admin<'a>(e: &Env, wasm: bool) -> (Address, AdminClient<'a>) {
     let contract_id = Address::generate(e);

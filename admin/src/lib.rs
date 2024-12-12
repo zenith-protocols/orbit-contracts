@@ -6,4 +6,3 @@ mod error;
 pub mod dependencies;
 
 pub use contract::*;
-pub use dependencies::pool::*;

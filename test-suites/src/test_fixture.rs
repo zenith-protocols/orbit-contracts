@@ -107,8 +107,6 @@ impl TestFixture<'_> {
         let (usdc_id, usdc_client) = create_stellar_token(&e, &admin);
         let (xlm_id, xlm_client) = create_stellar_token(&e, &admin);
         let (_, ousd_client) = create_stellar_token(&e, &admin);
-        //let (oeuro_id, oeuro_client) = create_stellar_token(&e, &admin);
-        //let (ogbp_id, ogbp_client) = create_stellar_token(&e, &admin);
 
         // deploy Blend Protocol dependencies
         let (backstop_id, backstop_client) = create_backstop(&e);
@@ -239,7 +237,7 @@ impl TestFixture<'_> {
 
     pub fn create_pool(&mut self, name: String, backstop_take_rate: u32, max_positions: u32) {
         let pool_id = self.pool_factory.deploy(
-            &self.admin_contract.address,
+            &self.admin,
             &name,
             &BytesN::<32>::random(&self.env),
             &self.bridge_oracle.address.clone(),
@@ -271,7 +269,10 @@ impl TestFixture<'_> {
     ) {
         let mut pool_fixture = self.pools.remove(pool_index);
         let token = &self.tokens[asset_index];
-        let index = self.admin_contract.set_reserve(&pool_fixture.pool.address, &token.address, reserve_config);
+        pool_fixture
+            .pool
+            .queue_set_reserve(&token.address, reserve_config);
+        let index = pool_fixture.pool.set_reserve(&token.address);
         pool_fixture.reserves.insert(asset_index, index);
         self.pools.insert(pool_index, pool_fixture);
     }

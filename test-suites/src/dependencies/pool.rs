@@ -1,4 +1,8 @@
-pub use admin::dependencies::pool::{Client as PoolClient, ReserveConfig, Positions, PoolDataKey, ReserveData, ReserveEmissionsData, ReserveEmissionsConfig, PoolConfig,  Request, ReserveEmissionMetadata, Reserve, WASM as POOL_WASM};
+mod pool_contract {
+    soroban_sdk::contractimport!(file = "../wasm/blend/pool.wasm");
+}
+
+pub use pool_contract::{Client as PoolClient, ReserveConfig, Positions, PoolDataKey, ReserveData, ReserveEmissionsData, ReserveEmissionsConfig, PoolConfig,  Request, ReserveEmissionMetadata, Reserve, WASM as POOL_WASM};
 
 #[derive(Clone, PartialEq)]
 #[repr(u32)]

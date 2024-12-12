@@ -80,7 +80,7 @@ pub fn create_fixture_with_data<'a>(mock: bool, wasm: bool) -> TestFixture<'a> {
             share: 0_400_0000,
         },
     ];
-    fixture.admin_contract.set_emissions_config(&pool_fixture.pool.address, &reserve_emissions);
+    pool_fixture.pool.set_emissions_config(&reserve_emissions);
     // deposit into backstop, add to reward zone
     fixture
         .backstop
@@ -102,7 +102,7 @@ pub fn create_fixture_with_data<'a>(mock: bool, wasm: bool) -> TestFixture<'a> {
     let token: Address = fixture.tokens[TokenIndex::OUSD].address.clone();
     let asset: Asset = Asset::Other(Symbol::new(&fixture.env, "USD"));
     let initial_supply: i128 = 1_000_000 * SCALAR_7;
-    fixture.tokens[TokenIndex::OUSD].set_admin(&fixture.admin_contract.address);
+    fixture.tokens[TokenIndex::OUSD].set_admin(&fixture.treasury.address);
     fixture.admin_contract.new_stablecoin(&token, &asset, &pool_fixture.pool.address, &initial_supply);
 
     fixture.jump(60 * 60); // 1 hr
