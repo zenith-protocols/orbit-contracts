@@ -9,9 +9,9 @@ pub use mock_pegkeeper::{MockPegkeeperClient, MockPegkeeperContract};
 pub fn create_mock_pegkeeper<'a>(e: &Env, wasm: bool) -> (Address, MockPegkeeperClient<'a>) {
     let contract_id = Address::generate(e);
     if wasm {
-        e.register_contract_wasm(&contract_id, mock_pegkeeper_contract::WASM);
+        e.register_at(&contract_id, mock_pegkeeper_contract::WASM, ());
     } else {
-        e.register_contract(&contract_id, MockPegkeeperContract {});
+        e.register_at(&contract_id, MockPegkeeperContract {}, ());
     }
     (contract_id.clone(), MockPegkeeperClient::new(e, &contract_id))
 }

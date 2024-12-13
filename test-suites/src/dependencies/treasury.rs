@@ -12,9 +12,9 @@ pub use treasury::{TreasuryClient, TreasuryContract};
 pub fn create_treasury<'a>(e: &Env, wasm: bool) -> (Address, TreasuryClient<'a>) {
     let contract_id = Address::generate(e);
     if wasm {
-        e.register_contract_wasm(&contract_id, treasury_contract::WASM);
+        e.register_at(&contract_id, treasury_contract::WASM, ());
     } else {
-        e.register_contract(&contract_id, TreasuryContract {});
+        e.register_at(&contract_id, TreasuryContract {}, ());
     }
     (contract_id.clone(), TreasuryClient::new(e, &contract_id))
 }

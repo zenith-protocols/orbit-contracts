@@ -10,9 +10,9 @@ pub use admin::{AdminClient, AdminContract};
 pub fn create_admin<'a>(e: &Env, wasm: bool) -> (Address, AdminClient<'a>) {
     let contract_id = Address::generate(e);
     if wasm {
-        e.register_contract_wasm(&contract_id, admin_contract::WASM);
+        e.register_at(&contract_id, admin_contract::WASM, ());
     } else {
-        e.register_contract(&contract_id, AdminContract {});
+        e.register_at(&contract_id, AdminContract {}, ());
     }
     (contract_id.clone(), AdminClient::new(e, &contract_id))
 }

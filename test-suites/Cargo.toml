@@ -16,9 +16,7 @@ debug-assertions = true
 
 [dependencies]
 soroban-sdk = { workspace = true, features = ["testutils"] }
-rand = { version = "0.7.3" }
 soroban-fixed-point-math = { workspace = true }
-cast = { workspace = true }
 sep-40-oracle = { workspace = true, features = ["testutils"] }
 sep-41-token = { workspace = true, features = ["testutils"] }
 treasury = { path = "../treasury", features = ["testutils"] }

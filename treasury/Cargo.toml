@@ -17,6 +17,3 @@ soroban-sdk = { workspace = true }
 
 [dev_dependencies]
 soroban-sdk = { workspace = true, features = ["testutils"] }
-
-[metadata]
-soroban_no_panics = true

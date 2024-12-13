@@ -13,7 +13,7 @@ fn test_initialization() {
     let admin = Address::generate(&env);
     let oracle = Address::generate(&env);
 
-    let treasury_address = env.register_contract(None, TreasuryContract);
+    let treasury_address = env.register(TreasuryContract, ());
     let treasury_client = TreasuryClient::new(&env, &treasury_address);
 
     treasury_client.initialize(&admin, &oracle);
@@ -27,7 +27,7 @@ fn test_uninitialized() {
     env.mock_all_auths();
     env.budget().reset_unlimited();
 
-    let treasury_address = env.register_contract(None, TreasuryContract);
+    let treasury_address = env.register(TreasuryContract, ());
     let treasury_client = TreasuryClient::new(&env, &treasury_address);
 
     treasury_client.set_pegkeeper(&Address::generate(&env));
@@ -42,7 +42,7 @@ fn test_update_pegkeeper() {
     let admin = Address::generate(&env);
     let pegkeeper = Address::generate(&env);
 
-    let treasury_address = env.register_contract(None, TreasuryContract);
+    let treasury_address = env.register(TreasuryContract, ());
     let treasury_client = TreasuryClient::new(&env, &treasury_address);
 
     treasury_client.initialize(&admin, &pegkeeper);

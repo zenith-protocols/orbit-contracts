@@ -8,9 +8,9 @@ pub use bridge_oracle::{BridgeOracleClient, BridgeOracleContract};
 pub fn create_bridge_oracle<'a>(e: &Env, wasm: bool) -> (Address, BridgeOracleClient<'a>) {
     let contract_id = Address::generate(e);
     if wasm {
-        e.register_contract_wasm(&contract_id, bridge_oracle_contract::WASM);
+        e.register_at(&contract_id, bridge_oracle_contract::WASM, ());
     } else {
-        e.register_contract(&contract_id, BridgeOracleContract {});
+        e.register_at(&contract_id, BridgeOracleContract {}, ());
     }
     (contract_id.clone(), BridgeOracleClient::new(e, &contract_id))
 }

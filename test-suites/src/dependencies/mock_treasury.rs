@@ -9,9 +9,9 @@ pub use mock_treasury::{MockTreasuryClient, MockTreasuryContract};
 pub fn create_mock_treasury<'a>(e: &Env, wasm: bool) -> (Address, MockTreasuryClient<'a>) {
     let contract_id = Address::generate(e);
     if wasm {
-        e.register_contract_wasm(&contract_id, mock_treasury_contract::WASM);
+        e.register_at(&contract_id, mock_treasury_contract::WASM, ());
     } else {
-        e.register_contract(&contract_id, MockTreasuryContract {});
+        e.register_at(&contract_id, MockTreasuryContract {}, ());
     }
     (contract_id.clone(), MockTreasuryClient::new(e, &contract_id))
 }

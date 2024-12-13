@@ -9,9 +9,9 @@ pub use pegkeeper::{PegkeeperClient, PegkeeperContract};
 pub fn create_pegkeeper<'a>(e: &Env, wasm: bool) -> (Address, PegkeeperClient<'a>) {
     let contract_id = Address::generate(e);
     if wasm {
-        e.register_contract_wasm(&contract_id, pegkeeper_contract::WASM);
+        e.register_at(&contract_id, pegkeeper_contract::WASM, ());
     } else {
-        e.register_contract(&contract_id, PegkeeperContract {});
+        e.register_at(&contract_id, PegkeeperContract {}, ());
     }
     (contract_id.clone(), PegkeeperClient::new(e, &contract_id))
 }

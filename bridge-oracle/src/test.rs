@@ -8,7 +8,7 @@ use soroban_sdk::testutils::{AuthorizedFunction, AuthorizedInvocation};
 use crate::{BridgeOracleContract, BridgeOracleClient};
 
 pub(crate) fn create_mock_oracle(e: &Env) -> (Address, MockPriceOracleClient) {
-    let contract_address = e.register_contract_wasm(None, MockPriceOracleWASM);
+    let contract_address = e.register(MockPriceOracleWASM, ());
     (
         contract_address.clone(),
         MockPriceOracleClient::new(e, &contract_address),
@@ -24,7 +24,7 @@ fn test_initialization() {
     let admin = Address::generate(&env);
     let oracle = Address::generate(&env);
 
-    let bridge_oracle_address = env.register_contract(None, BridgeOracleContract);
+    let bridge_oracle_address = env.register(BridgeOracleContract, ());
     let bridge_oracle_client = BridgeOracleClient::new(&env, &bridge_oracle_address);
 
     bridge_oracle_client.initialize(&admin, &oracle);
@@ -42,7 +42,7 @@ fn test_add_assets() {
     // We don't need actual token contracts for this test
     let token1 = Address::generate(&env);
     let token2 = Address::generate(&env);
-    let bridge_oracle_address = env.register_contract(None, BridgeOracleContract);
+    let bridge_oracle_address = env.register(BridgeOracleContract, ());
     let bridge_oracle_client = BridgeOracleClient::new(&env, &bridge_oracle_address);
     let (oracle_address, mock_oracle_client) = create_mock_oracle(&env);
 
@@ -110,7 +110,7 @@ fn test_uninitialized() {
     env.mock_all_auths();
     env.budget().reset_unlimited();
 
-    let bridge_oracle_address = env.register_contract(None, BridgeOracleContract);
+    let bridge_oracle_address = env.register(BridgeOracleContract, ());
     let bridge_oracle_client = BridgeOracleClient::new(&env, &bridge_oracle_address);
 
     bridge_oracle_client.set_oracle(&Address::generate(&env));
@@ -125,7 +125,7 @@ fn test_update_oracle() {
     let admin = Address::generate(&env);
     let oracle = Address::generate(&env);
 
-    let bridge_oracle_address = env.register_contract(None, BridgeOracleContract);
+    let bridge_oracle_address = env.register(BridgeOracleContract, ());
     let bridge_oracle_client = BridgeOracleClient::new(&env, &bridge_oracle_address);
 
     bridge_oracle_client.initialize(&admin, &oracle);

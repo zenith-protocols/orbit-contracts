@@ -7,6 +7,6 @@ pub use pool_factory_contract::{Client as PoolFactoryClient, WASM as POOL_FACTOR
 
 pub fn create_pool_factory<'a>(e: &Env) -> (Address, PoolFactoryClient<'a>) {
     let contract_id = Address::generate(e);
-    e.register_contract_wasm(&contract_id, POOL_FACTORY_WASM);
+    e.register_at(&contract_id, POOL_FACTORY_WASM, ());
     (contract_id.clone(), PoolFactoryClient::new(e, &contract_id))
 }
