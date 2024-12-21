@@ -111,7 +111,9 @@ impl Treasury for TreasuryContract {
 
         token::StellarAssetClient::new(&e, &token).mint(&e.current_contract_address(), &amount);
 
-        let blend = storage::get_blend_pool(&e, &token);
+        let blend = storage::get_blend_pool(&e, &token).unwrap_or_else(|| {
+            panic_with_error!(e, TreasuryError::BlendPoolNotFoundError);
+        });
         let args: Vec<Val> = vec![
             &e,
             e.current_contract_address().into_val(&e),
@@ -153,7 +155,9 @@ impl Treasury for TreasuryContract {
         let token_client = token::TokenClient::new(&e, &token);
         let balance = token_client.balance(&e.current_contract_address());
 
-        let blend = storage::get_blend_pool(&e, &token);
+        let blend = storage::get_blend_pool(&e, &token).unwrap_or_else(|| {
+            panic_with_error!(e, TreasuryError::BlendPoolNotFoundError);
+        });
         PoolClient::new(&e, &blend).submit(&e.current_contract_address(), &e.current_contract_address(), &e.current_contract_address(), &vec![
             &e,
             Request {
