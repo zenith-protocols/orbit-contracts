@@ -7,7 +7,7 @@ const LEDGER_BUMP_INSTANCE: u32 = LEDGER_THRESHOLD_INSTANCE + ONE_DAY_LEDGERS; /
 #[derive(Clone)]
 #[contracttype]
 pub enum PegkeeperDataKey {
-    ADMIN,
+    TREASURY,
     ROUTER,
 }
 
@@ -17,19 +17,19 @@ pub fn extend_instance(e: &Env) {
         .extend_ttl(LEDGER_THRESHOLD_INSTANCE, LEDGER_BUMP_INSTANCE);
 }
 
-pub fn is_init(e: &Env) -> bool { e.storage().instance().has(&PegkeeperDataKey::ADMIN) }
+pub fn is_init(e: &Env) -> bool { e.storage().instance().has(&PegkeeperDataKey::TREASURY) }
 
-pub fn get_admin(e: &Env) -> Address {
+pub fn get_treasury(e: &Env) -> Address {
     e.storage()
         .instance()
-        .get(&PegkeeperDataKey::ADMIN)
+        .get(&PegkeeperDataKey::TREASURY)
         .unwrap_optimized()
 }
 
-pub fn set_admin(e: &Env, new_admin: &Address) {
+pub fn set_treasury(e: &Env, new_admin: &Address) {
     e.storage()
         .instance()
-        .set(&PegkeeperDataKey::ADMIN, new_admin);
+        .set(&PegkeeperDataKey::TREASURY, new_admin);
 }
 
 pub fn get_router(e: &Env) -> Address {

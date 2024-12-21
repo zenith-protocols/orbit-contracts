@@ -7,21 +7,25 @@ use crate::dependencies::{
 };
 use crate::storage;
 
+const REQUEST_TYPE_LIQUIDATION_AUCTION: u32 = 6;
+const REQUEST_TYPE_REPAY: u32 = 5;
+const REQUEST_TYPE_COLLATERAL_WITHDRAWAL: u32 = 3;
+
 pub fn liquidate(e: &Env, auction_creator: Address, token_a: Address, token_a_bid_amount: i128, token_b: Address, token_b_lot_amount: i128, blend_pool: Address, liq_amount: i128) {
   let fill_requests = vec![
       e,
       Request {
-          request_type: 6 as u32, // liquidationAuction
+          request_type: REQUEST_TYPE_LIQUIDATION_AUCTION,
           address: auction_creator.clone(),
           amount: liq_amount.clone(),
       },
       Request {
-          request_type: 5 as u32, // Repay
+          request_type: REQUEST_TYPE_REPAY,
           address: token_a.clone(),
           amount: token_a_bid_amount,
       },
       Request {
-          request_type: 3 as u32, // Withdraw
+          request_type: REQUEST_TYPE_COLLATERAL_WITHDRAWAL,
           address: token_b.clone(),
           amount: token_b_lot_amount,
       },

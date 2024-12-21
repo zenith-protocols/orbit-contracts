@@ -9,7 +9,7 @@ pub struct AdminContract;
 #[contractclient(name = "AdminClient")]
 pub trait Admin {
 
-    /// Initializes the bridge oracle
+    /// Initializes the AdminContract
     /// # Arguments
     /// * `admin` - The admin address
     /// * `treasury` - The treasury address

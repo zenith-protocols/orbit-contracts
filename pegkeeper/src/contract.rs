@@ -7,12 +7,12 @@ pub struct PegkeeperContract;
 #[contractclient(name="PegkeeperClient")]
 pub trait Pegkeeper {
 
-    /// Initialize the treasury
+    /// Initializes the PegKeeper contract
     ///
     /// ### Arguments
-    /// * `admin` - The Address for the admin
-    /// * `maximum_duration` - The maximum_duration for swap transaction
-    fn initialize(e: Env, admin: Address, router: Address);
+    /// * `treasury` - The Address of the treasury
+    /// * `router` - The address of the soroswap router
+    fn initialize(e: Env, treasury: Address, router: Address);
 
     /// Execute operation
     ///
@@ -32,7 +32,7 @@ pub trait Pegkeeper {
 #[contractimpl]
 impl Pegkeeper for PegkeeperContract {
 
-    fn initialize(e: Env, admin: Address, router: Address) {
+    fn initialize(e: Env, treasury: Address, router: Address) {
         storage::extend_instance(&e);
 
         if storage::is_init(&e) {
@@ -40,27 +40,27 @@ impl Pegkeeper for PegkeeperContract {
         }
 
         storage::set_router(&e, &router);
-        storage::set_admin(&e, &admin);
-        e.events().publish(("Pegkeeper", Symbol::new(&e, "init")), (admin.clone(), router.clone()));
+        storage::set_treasury(&e, &treasury);
+        e.events().publish(("Pegkeeper", Symbol::new(&e, "init")), (treasury.clone(), router.clone()));
     }
 
     fn fl_receive(e: Env, token: Address, amount: i128, blend_pool: Address, auction: Address, collateral_token: Address, lot_amount: i128, liq_amount: i128, amm: Address, fee_taker: Address) {
         storage::extend_instance(&e);
 
-        let admin = storage::get_admin(&e);
-        admin.require_auth();
+        let treasury = storage::get_treasury(&e);
+        treasury.require_auth();
 
-        let token_client = token::Client::new(&e, &token);
-        let collateral_client = token::Client::new(&e, &collateral_token);
+        let token_client = token::TokenClient::new(&e, &token);
+        let collateral_client = token::TokenClient::new(&e, &collateral_token);
         let balance_before = token_client.balance(&e.current_contract_address());
         let collateral_balance = collateral_client.balance(&e.current_contract_address());
 
         helper::liquidate(&e, auction, token.clone(), amount.clone(), collateral_token.clone(), lot_amount.clone(), blend_pool.clone(), liq_amount.clone());
 
         let collateral_balance_after = collateral_client.balance(&e.current_contract_address());
-        let lot_amount = collateral_balance_after - collateral_balance;
+        let to_swap = collateral_balance_after - collateral_balance;
 
-        helper::swap(&e, amm, collateral_token.clone(), token.clone(), lot_amount.clone(), 0);
+        helper::swap(&e, amm, collateral_token.clone(), token.clone(), to_swap.clone(), 0);
 
         let balance_after = token_client.balance(&e.current_contract_address());
 
@@ -73,7 +73,7 @@ impl Pegkeeper for PegkeeperContract {
 
         token_client.approve(
             &e.current_contract_address(),
-            &admin,
+            &treasury,
             &amount,
             &(e.ledger().sequence() + 1),
         );

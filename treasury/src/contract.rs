@@ -4,6 +4,9 @@ use soroban_sdk::{contract, contractclient, contractimpl, panic_with_error, toke
 use soroban_sdk::auth::{ContractContext, InvokerContractAuthEntry, SubContractInvocation};
 use crate::errors::TreasuryError;
 
+const REQUEST_TYPE_SUPPLY: u32 = 0;
+const REQUEST_TYPE_WITHDRAW: u32 = 1;
+
 #[contract]
 pub struct TreasuryContract;
 
@@ -132,7 +135,7 @@ impl Treasury for TreasuryContract {
         PoolClient::new(&e, &blend).submit(&e.current_contract_address(), &e.current_contract_address(), &e.current_contract_address(), &vec![
             &e,
             Request {
-                request_type: 0_u32, // SUPPLY RequestType
+                request_type: REQUEST_TYPE_SUPPLY,
                 address: token.clone(),
                 amount,
             },
@@ -157,7 +160,7 @@ impl Treasury for TreasuryContract {
         PoolClient::new(&e, &blend).submit(&e.current_contract_address(), &e.current_contract_address(), &e.current_contract_address(), &vec![
             &e,
             Request {
-                request_type: 1_u32, // WITHDRAW RequestType
+                request_type: REQUEST_TYPE_WITHDRAW,
                 address: token.clone(),
                 amount,
             },
