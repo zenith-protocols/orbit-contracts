@@ -1,4 +1,4 @@
-use soroban_sdk::{Address, Env, contracttype, IntoVal, Val, TryFromVal};
+use soroban_sdk::{Address, Env, contracttype};
 use sep_40_oracle::Asset;
 use soroban_sdk::unwrap::UnwrapOptimized;
 
@@ -22,24 +22,6 @@ pub fn extend_instance(env: &Env) {
         .extend_ttl(LEDGER_THRESHOLD_INSTANCE, LEDGER_BUMP_INSTANCE);
 }
 
-/// Fetch an entry in persistent storage that has a default value if it doesn't exist
-fn get_persistent_default<K: IntoVal<Env, Val>, V: TryFromVal<Env, Val>, F: FnOnce() -> V>(
-    e: &Env,
-    key: &K,
-    default: F,
-    bump_threshold: u32,
-    bump_amount: u32,
-) -> V {
-    if let Some(result) = e.storage().persistent().get::<K, V>(key) {
-        e.storage()
-            .persistent()
-            .extend_ttl(key, bump_threshold, bump_amount);
-        result
-    } else {
-        default()
-    }
-}
-
 pub fn is_init(e: &Env) -> bool { e.storage().instance().has(&BridgeOracleDataKey::ADMIN) }
 
 pub fn get_admin(e: &Env) -> Address {
@@ -57,13 +39,12 @@ pub fn set_admin(e: &Env, new_admin: &Address) {
 
 pub fn get_bridge_asset(env: &Env, asset: &Asset) -> Asset {
     let key = BridgeOracleDataKey::BRIDGE(asset.clone());
-    get_persistent_default(
-        env,
-        &key,
-        || asset.clone(),
-        LEDGER_THRESHOLD_PERSISTANT,
-        LEDGER_BUMP_PERSISTANT,
-    )
+    if let Some(result) = env.storage().persistent().get::<BridgeOracleDataKey, Asset>(&key) {
+        env.storage().persistent().extend_ttl(&key, LEDGER_THRESHOLD_PERSISTANT, LEDGER_BUMP_PERSISTANT);
+        result
+    } else {
+        asset.clone()
+    }
 }
 
 pub fn set_bridge_asset(env: &Env, asset: &Asset, to: &Asset) {
