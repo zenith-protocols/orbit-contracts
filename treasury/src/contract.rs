@@ -1,5 +1,6 @@
 use crate::storage;
 use crate::dependencies::pool::{Client as PoolClient, Request};
+use crate::dependencies::pool_factory::{Client as PoolFactoryClient};
 use soroban_sdk::{contract, contractclient, contractimpl, panic_with_error, token, vec, Address, BytesN, Env, IntoVal, Symbol, TryFromVal, Val, Vec};
 use soroban_sdk::auth::{ContractContext, InvokerContractAuthEntry, SubContractInvocation};
 use crate::errors::TreasuryError;
@@ -14,12 +15,12 @@ pub trait Treasury {
     ///
     /// ### Arguments
     /// * `admin` - The Address for the admin
-    /// * `token` - The Address for the token
+    /// * `factory` - The Address for the blend factory
     /// * `pegkeeper` - The Address for the pegkeeper
     ///
     /// ### Panics
     /// If the contract is already initialized
-    fn initialize(e: Env, admin: Address, pegkeeper: Address);
+    fn initialize(e: Env, admin: Address, factory: Address, pegkeeper: Address);
 
     /// (Admin only) add a stablecoin
     ///
@@ -78,13 +79,14 @@ pub trait Treasury {
 #[contractimpl]
 impl Treasury for TreasuryContract {
 
-    fn initialize(e: Env, admin: Address, pegkeeper: Address) {
+    fn initialize(e: Env, admin: Address, factory: Address, pegkeeper: Address) {
         storage::extend_instance(&e);
         if storage::is_init(&e) {
             panic_with_error!(&e, TreasuryError::AlreadyInitializedError);
         }
 
         storage::set_pegkeeper(&e, &pegkeeper);
+        storage::set_factory(&e, &factory);
         storage::set_admin(&e, &admin);
 
         e.events().publish(("Treasury", Symbol::new(&e, "initialize")), (admin.clone(), pegkeeper.clone()));
@@ -94,6 +96,15 @@ impl Treasury for TreasuryContract {
         storage::extend_instance(&e);
         let admin = storage::get_admin(&e);
         admin.require_auth();
+
+        if let Some(_) = storage::get_blend_pool(&e, &token) {
+            panic_with_error!(e, TreasuryError::AlreadyAddedError);
+        }
+
+        let is_pool = PoolFactoryClient::new(&e, &storage::get_factory(&e)).is_pool(&blend_pool);
+        if !is_pool {
+            panic_with_error!(e, TreasuryError::InvalidBlendPoolError);
+        }
 
         storage::set_blend_pool(&e, &token, &blend_pool);
 
@@ -181,10 +192,17 @@ impl Treasury for TreasuryContract {
 
         let token = Address::try_from_val(&e, &args.get(0).unwrap()).unwrap();
         let amount = i128::try_from_val(&e, &args.get(1).unwrap()).unwrap();
+        let pool = Address::try_from_val(&e, &args.get(2).unwrap()).unwrap();
         let pegkeeper: Address = storage::get_pegkeeper(&e);
 
         if amount <= 0 {
             panic_with_error!(e, TreasuryError::InvalidAmount);
+        }
+        let blend = storage::get_blend_pool(&e, &token).unwrap_or_else(|| {
+            panic_with_error!(e, TreasuryError::BlendPoolNotFoundError);
+        });
+        if blend != pool {
+            panic_with_error!(e, TreasuryError::InvalidBlendPoolError);
         }
 
         token::StellarAssetClient::new(&e, &token).mint(&pegkeeper, &amount);
