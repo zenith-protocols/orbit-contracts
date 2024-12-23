@@ -12,9 +12,8 @@ pub trait Pegkeeper {
     ///
     /// ### Arguments
     /// * `admin` - The Address for the admin
-    /// * `factory` - The Address for the blend pool factory
     /// * `maximum_duration` - The maximum_duration for swap transaction
-    fn initialize(e: Env, admin: Address, factory: Address, router: Address);
+    fn initialize(e: Env, admin: Address, router: Address);
 
     /// Execute operation
     ///
@@ -35,7 +34,7 @@ pub trait Pegkeeper {
 #[contractimpl]
 impl Pegkeeper for PegkeeperContract {
 
-    fn initialize(e: Env, admin: Address, factory: Address, router: Address) {
+    fn initialize(e: Env, admin: Address, router: Address) {
         storage::extend_instance(&e);
 
         if storage::is_init(&e) {
@@ -43,7 +42,6 @@ impl Pegkeeper for PegkeeperContract {
         }
 
         storage::set_router(&e, &router);
-        storage::set_factory(&e, &factory);
         storage::set_admin(&e, &admin);
         e.events().publish(("Pegkeeper", Symbol::new(&e, "init")), (admin.clone(), router.clone()));
     }
@@ -53,11 +51,6 @@ impl Pegkeeper for PegkeeperContract {
 
         let admin = storage::get_admin(&e);
         admin.require_auth();
-
-        let is_pool = FactoryClient::new(&e, &storage::get_factory(&e)).is_pool(&blend_pool);
-        if !is_pool {
-            panic_with_error!(&e, PegkeeperError::InvalidBlendPool);
-        }
 
         let token_client = token::Client::new(&e, &token);
         let collateral_client = token::Client::new(&e, &collateral_token);
