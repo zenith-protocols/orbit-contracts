@@ -1,6 +1,5 @@
 use soroban_sdk::{contract, contractclient, contractimpl, panic_with_error, token, Address, Env, Symbol};
 use crate::{errors::PegkeeperError, storage, helper};
-use crate::dependencies::pool_factory::Client as FactoryClient;
 
 #[contract]
 pub struct PegkeeperContract;
