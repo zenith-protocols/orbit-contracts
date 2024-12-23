@@ -78,5 +78,5 @@ pub fn swap(e: &Env, pair: Address, token_a: Address, token_b: Address, amount_a
           sub_invocations: vec![e]
       })
   ]);
-  router_client.swap_exact_tokens_for_tokens(&amount_a, &amount_b, &path, &e.current_contract_address(), &u64::MAX);
+  let _ = router_client.swap_exact_tokens_for_tokens(&amount_a, &amount_b, &path, &e.current_contract_address(), &u64::MAX);
 }
