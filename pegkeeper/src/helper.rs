@@ -5,9 +5,10 @@ use crate::dependencies::{
     router::{Client as RouterClient},
     pool::{Client as PoolClient, Request},
 };
+use crate::dependencies::pool::Positions;
 use crate::storage;
 
-pub fn liquidate(e: &Env, auction_creator: Address, token_a: Address, token_a_bid_amount: i128, token_b: Address, token_b_lot_amount: i128, blend_pool: Address, liq_amount: i128) {
+pub fn liquidate(e: &Env, auction_creator: Address, token_a: Address, token_a_bid_amount: i128, token_b: Address, token_b_lot_amount: i128, blend_pool: Address, liq_amount: i128) -> Positions {
   let fill_requests = vec![
       e,
       Request {
@@ -45,7 +46,7 @@ pub fn liquidate(e: &Env, auction_creator: Address, token_a: Address, token_a_bi
       })
   ]);
 
-  PoolClient::new(e, &blend_pool).submit(&e.current_contract_address(), &e.current_contract_address(), &e.current_contract_address(), &fill_requests);
+  PoolClient::new(e, &blend_pool).submit(&e.current_contract_address(), &e.current_contract_address(), &e.current_contract_address(), &fill_requests)
 }
 
 pub fn swap(e: &Env, pair: Address, token_a: Address, token_b: Address, amount_a: i128, amount_b: i128) {

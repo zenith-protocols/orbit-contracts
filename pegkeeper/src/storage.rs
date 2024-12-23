@@ -8,6 +8,7 @@ const LEDGER_BUMP_INSTANCE: u32 = LEDGER_THRESHOLD_INSTANCE + ONE_DAY_LEDGERS; /
 #[contracttype]
 pub enum PegkeeperDataKey {
     ADMIN,
+    FACTORY,
     ROUTER,
 }
 
@@ -30,6 +31,20 @@ pub fn set_admin(e: &Env, new_admin: &Address) {
     e.storage()
         .instance()
         .set(&PegkeeperDataKey::ADMIN, new_admin);
+}
+
+
+pub fn get_factory(e: &Env) -> Address {
+    e.storage()
+        .instance()
+        .get(&PegkeeperDataKey::FACTORY)
+        .unwrap_optimized()
+}
+
+pub fn set_factory(e: &Env, new_factory: &Address) {
+    e.storage()
+        .instance()
+        .set(&PegkeeperDataKey::FACTORY, new_factory);
 }
 
 pub fn get_router(e: &Env) -> Address {

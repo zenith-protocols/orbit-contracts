@@ -197,7 +197,7 @@ impl TestFixture<'_> {
         bridge_oracle_client.initialize(&admin_id, &mock_oracle_id);
 
         // init pegkeeper
-        pegkeeper_client.initialize(&treasury_id, &router_id);
+        pegkeeper_client.initialize(&treasury_id, &pool_factory_id, &router_id);
         mock_pegkeeper_client.initialize(&mock_treasury_id, &router_id);
 
         // init treasury
