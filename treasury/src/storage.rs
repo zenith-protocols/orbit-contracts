@@ -12,6 +12,7 @@ const LEDGER_BUMP_PERSISTANT: u32 = LEDGER_THRESHOLD_PERSISTANT + 20 * ONE_DAY_L
 pub enum TreasuryDataKey {
     ADMIN,
     BLENDPOOL(Address),
+    FACTORY,
     PEGKEEPER,
 }
 
@@ -48,6 +49,19 @@ pub fn set_pegkeeper(e: &Env, new_pegkeeper: &Address) {
     e.storage()
         .instance()
         .set(&TreasuryDataKey::PEGKEEPER, new_pegkeeper);
+}
+
+pub fn get_factory(e: &Env) -> Address {
+    e.storage()
+        .instance()
+        .get(&TreasuryDataKey::FACTORY)
+        .unwrap_optimized()
+}
+
+pub fn set_factory(e: &Env, new_factory: &Address) {
+    e.storage()
+        .instance()
+        .set(&TreasuryDataKey::FACTORY, new_factory);
 }
 
 pub fn get_blend_pool(e: &Env, token_address: &Address) -> Option<Address> {

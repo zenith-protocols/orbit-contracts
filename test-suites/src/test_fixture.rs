@@ -201,7 +201,7 @@ impl TestFixture<'_> {
         mock_pegkeeper_client.initialize(&mock_treasury_id, &router_id);
 
         // init treasury
-        treasury_client.initialize(&admin_id, &pegkeeper_id);
+        treasury_client.initialize(&admin_id, &pool_factory_id, &pegkeeper_id);
         mock_treasury_client.initialize(&admin_id, &mock_pegkeeper_id);
 
 
