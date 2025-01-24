@@ -25,8 +25,9 @@ pub trait Pegkeeper {
     /// * `lot_amount` - The amount of the collateral token to withdraw after liquidation
     /// * `liq_amount` - The amount to liquidate in percentage 0-100
     /// * `amm` - The Address for the AMM
+    /// * `min_profit` - The minimum profit acceptable
     /// * `fee_taker` - The Address for the fee taker
-    fn fl_receive(e: Env, token: Address, amount: i128, blend_pool: Address, auction: Address, collateral_token: Address, lot_amount: i128, liq_amount: i128, amm: Address, fee_taker: Address);
+    fn fl_receive(e: Env, token: Address, amount: i128, blend_pool: Address, auction: Address, collateral_token: Address, lot_amount: i128, liq_amount: i128, amm: Address, min_profit: i128, fee_taker: Address);
 }
 
 #[contractimpl]
@@ -44,7 +45,7 @@ impl Pegkeeper for PegkeeperContract {
         e.events().publish(("Pegkeeper", Symbol::new(&e, "init")), (treasury.clone(), router.clone()));
     }
 
-    fn fl_receive(e: Env, token: Address, amount: i128, blend_pool: Address, auction: Address, collateral_token: Address, lot_amount: i128, liq_amount: i128, amm: Address, fee_taker: Address) {
+    fn fl_receive(e: Env, token: Address, amount: i128, blend_pool: Address, auction: Address, collateral_token: Address, lot_amount: i128, liq_amount: i128, amm: Address, min_profit: i128, fee_taker: Address) {
         storage::extend_instance(&e);
 
         let treasury = storage::get_treasury(&e);
@@ -55,7 +56,10 @@ impl Pegkeeper for PegkeeperContract {
         let balance_before = token_client.balance(&e.current_contract_address());
         let collateral_balance = collateral_client.balance(&e.current_contract_address());
 
-        helper::liquidate(&e, auction, token.clone(), amount.clone(), collateral_token.clone(), lot_amount.clone(), blend_pool.clone(), liq_amount.clone());
+        let positions = helper::liquidate(&e, auction, token.clone(), amount.clone(), collateral_token.clone(), lot_amount.clone(), blend_pool.clone(), liq_amount.clone());
+        if positions.liabilities.len() > 0 || positions.collateral.len() > 0 {
+            panic_with_error!(&e, PegkeeperError::PositionStillOpen);
+        }
 
         let collateral_balance_after = collateral_client.balance(&e.current_contract_address());
         let to_swap = collateral_balance_after - collateral_balance;
@@ -64,11 +68,10 @@ impl Pegkeeper for PegkeeperContract {
 
         let balance_after = token_client.balance(&e.current_contract_address());
 
-        if balance_before > balance_after {
+        let profit = balance_after - balance_before;
+        if profit < min_profit {
             panic_with_error!(&e, PegkeeperError::NotProfitable);
         }
-
-        let profit = balance_after - balance_before;
         token_client.transfer(&e.current_contract_address(), &fee_taker, &profit);
 
         token_client.approve(

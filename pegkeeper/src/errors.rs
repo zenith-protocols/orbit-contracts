@@ -6,4 +6,5 @@ use soroban_sdk::{self, contracterror};
 pub enum PegkeeperError {
     AlreadyInitializedError = 1501,
     NotProfitable = 1505,
+    PositionStillOpen = 1507,
 }

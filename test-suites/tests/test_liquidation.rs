@@ -169,6 +169,7 @@ fn test_pegkeeper() {
         lot_amount.into_val(&fixture.env),
         (liq_pct as i128).into_val(&fixture.env),
         amm.into_val(&fixture.env),
+        (0i128).into_val(&fixture.env),
         piet.into_val(&fixture.env),
     ];
     let fl_receive_sym = Symbol::new(&fixture.env, "fl_receive");
@@ -261,6 +262,7 @@ fn test_pegkeeper_no_profit() {
         lot_amount.into_val(&fixture.env),
         (liq_pct as i128).into_val(&fixture.env),
         amm.into_val(&fixture.env),
+        (0i128).into_val(&fixture.env),
         piet.into_val(&fixture.env),
     ];
     let fl_receive_sym = Symbol::new(&fixture.env, "fl_receive");
