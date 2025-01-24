@@ -8,4 +8,5 @@ pub enum TreasuryError {
     InvalidAmount = 1502,
     FlashloanFailedError = 1503,
     NotEnoughSupplyError = 1504,
+    BlendPoolNotFoundError = 1506,
 }

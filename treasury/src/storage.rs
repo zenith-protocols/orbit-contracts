@@ -1,8 +1,11 @@
 use soroban_sdk::{Address, contracttype, Env};
 use soroban_sdk::unwrap::UnwrapOptimized;
 
-pub(crate) const LEDGER_THRESHOLD_SHARED: u32 = 172800; // ~ 10 days
-pub(crate) const LEDGER_BUMP_SHARED: u32 = 241920; // ~ 14 days
+const ONE_DAY_LEDGERS: u32 = 17280; // assumes 5s a ledger
+const LEDGER_THRESHOLD_INSTANCE: u32 = ONE_DAY_LEDGERS * 30; // ~ 30 days
+const LEDGER_BUMP_INSTANCE: u32 = LEDGER_THRESHOLD_INSTANCE + ONE_DAY_LEDGERS; // ~ 31 days
+const LEDGER_THRESHOLD_PERSISTANT: u32 = ONE_DAY_LEDGERS * 100; // ~ 100 days
+const LEDGER_BUMP_PERSISTANT: u32 = LEDGER_THRESHOLD_PERSISTANT + 20 * ONE_DAY_LEDGERS; // ~ 120 days
 
 #[derive(Clone)]
 #[contracttype]
@@ -15,7 +18,7 @@ pub enum TreasuryDataKey {
 pub fn extend_instance(e: &Env) {
     e.storage()
         .instance()
-        .extend_ttl(LEDGER_THRESHOLD_SHARED, LEDGER_BUMP_SHARED);
+        .extend_ttl(LEDGER_THRESHOLD_INSTANCE, LEDGER_BUMP_INSTANCE);
 }
 
 pub fn is_init(e: &Env) -> bool { e.storage().instance().has(&TreasuryDataKey::ADMIN) }
@@ -47,15 +50,18 @@ pub fn set_pegkeeper(e: &Env, new_pegkeeper: &Address) {
         .set(&TreasuryDataKey::PEGKEEPER, new_pegkeeper);
 }
 
-pub fn get_blend_pool(e: &Env, token_address: &Address) -> Address {
-    e.storage()
-        .instance()
-        .get(&TreasuryDataKey::BLENDPOOL(token_address.clone()))
-        .unwrap_optimized()
+pub fn get_blend_pool(e: &Env, token_address: &Address) -> Option<Address> {
+    let key = TreasuryDataKey::BLENDPOOL(token_address.clone());
+    if let Some(result) = e.storage().persistent().get::<TreasuryDataKey, Address>(&key) {
+        e.storage().persistent().extend_ttl(&key, LEDGER_THRESHOLD_PERSISTANT, LEDGER_BUMP_PERSISTANT);
+        Some(result)
+    } else {
+        None
+    }
 }
 
 pub fn set_blend_pool(e: &Env, token_address: &Address, blend_pool: &Address) {
-    e.storage()
-        .instance()
-        .set(&TreasuryDataKey::BLENDPOOL(token_address.clone()), blend_pool);
+    let key = TreasuryDataKey::BLENDPOOL(token_address.clone());
+    e.storage().persistent().set::<TreasuryDataKey, Address>(&key, blend_pool);
+    e.storage().persistent().extend_ttl(&key, LEDGER_THRESHOLD_PERSISTANT, LEDGER_BUMP_PERSISTANT);
 }
