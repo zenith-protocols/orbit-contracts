@@ -1,6 +1,5 @@
 pub use sep_40_oracle::{Asset, PriceData};
-use soroban_sdk::{contract, contractclient, contractimpl, vec, Address, Env, Symbol, Vec, Val, IntoVal, panic_with_error, BytesN};
-use crate::error::BridgeOracleError;
+use soroban_sdk::{contract, contractclient, contractimpl, vec, Address, Env, Symbol, Vec, Val, IntoVal, BytesN};
 use crate::storage;
 
 #[contract]
@@ -8,12 +7,6 @@ pub struct BridgeOracleContract;
 
 #[contractclient(name = "BridgeOracleClient")]
 pub trait BridgeOracle {
-
-    /// Initializes the bridge oracle
-    /// # Arguments
-    /// * `admin` - The admin address
-    /// * `oracle` - The oracle contract address
-    fn initialize(e: Env, admin: Address, oracle: Address);
 
     /// (Admin only) Add a new asset to the oracle
     /// # Arguments
@@ -41,18 +34,24 @@ pub trait BridgeOracle {
 }
 
 #[contractimpl]
-impl BridgeOracle for BridgeOracleContract {
-    fn initialize(e: Env, admin: Address, oracle: Address) {
-        storage::extend_instance(&e);
-        if storage::is_init(&e) {
-            panic_with_error!(&e, BridgeOracleError::AlreadyInitializedError);
-        }
+impl BridgeOracleContract {
+
+    /// Initializes the bridge oracle
+    /// # Arguments
+    /// * `admin` - The admin address
+    /// * `oracle` - The oracle contract address
+    pub fn __constructor(e: Env, admin: Address, oracle: Address) {
+        admin.require_auth();
 
         storage::set_admin(&e, &admin);
         storage::set_oracle(&e, &oracle);
 
         e.events().publish(("BridgeOracle", Symbol::new(&e, "init")), (admin.clone(), oracle.clone()));
     }
+}
+
+#[contractimpl]
+impl BridgeOracle for BridgeOracleContract {
 
     fn add_asset(e: Env, asset: Asset, to: Asset) {
         storage::extend_instance(&e);

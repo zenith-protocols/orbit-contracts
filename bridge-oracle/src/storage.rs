@@ -22,8 +22,6 @@ pub fn extend_instance(env: &Env) {
         .extend_ttl(LEDGER_THRESHOLD_INSTANCE, LEDGER_BUMP_INSTANCE);
 }
 
-pub fn is_init(e: &Env) -> bool { e.storage().instance().has(&BridgeOracleDataKey::ADMIN) }
-
 pub fn get_admin(e: &Env) -> Address {
     e.storage()
         .instance()

@@ -16,23 +16,6 @@ pub(crate) fn create_mock_oracle(e: &Env) -> (Address, MockPriceOracleClient) {
 }
 
 #[test]
-#[should_panic(expected = "Error(Contract, #1501)")] // AlreadyInitializedError
-fn test_initialization() {
-    let env: Env = Default::default();
-    env.mock_all_auths();
-
-    let admin = Address::generate(&env);
-    let oracle = Address::generate(&env);
-
-    let bridge_oracle_address = env.register(BridgeOracleContract, ());
-    let bridge_oracle_client = BridgeOracleClient::new(&env, &bridge_oracle_address);
-
-    bridge_oracle_client.initialize(&admin, &oracle);
-
-    bridge_oracle_client.initialize(&admin, &oracle);
-}
-
-#[test]
 fn test_add_assets() {
     let env: Env = Default::default();
     env.mock_all_auths();
@@ -42,8 +25,6 @@ fn test_add_assets() {
     // We don't need actual token contracts for this test
     let token1 = Address::generate(&env);
     let token2 = Address::generate(&env);
-    let bridge_oracle_address = env.register(BridgeOracleContract, ());
-    let bridge_oracle_client = BridgeOracleClient::new(&env, &bridge_oracle_address);
     let (oracle_address, mock_oracle_client) = create_mock_oracle(&env);
 
     mock_oracle_client.set_data(
@@ -63,7 +44,8 @@ fn test_add_assets() {
             1_1000000,
         ]);
 
-    bridge_oracle_client.initialize(&admin, &oracle_address);
+    let bridge_oracle_address = env.register(BridgeOracleContract, (admin.clone(), oracle_address));
+    let bridge_oracle_client = BridgeOracleClient::new(&env, &bridge_oracle_address);
 
     let stellar_asset = Asset::Stellar(token1.clone());
     let stellar_asset2 = Asset::Stellar(token2.clone());
@@ -104,19 +86,6 @@ fn test_add_assets() {
 }
 
 #[test]
-#[should_panic(expected = "Error(WasmVm, InvalidAction)")] // Fails because no admin is set
-fn test_uninitialized() {
-    let env: Env = Default::default();
-    env.mock_all_auths();
-    env.budget().reset_unlimited();
-
-    let bridge_oracle_address = env.register(BridgeOracleContract, ());
-    let bridge_oracle_client = BridgeOracleClient::new(&env, &bridge_oracle_address);
-
-    bridge_oracle_client.set_oracle(&Address::generate(&env));
-}
-
-#[test]
 fn test_update_oracle() {
     let env: Env = Default::default();
     env.mock_all_auths();
@@ -125,10 +94,9 @@ fn test_update_oracle() {
     let admin = Address::generate(&env);
     let oracle = Address::generate(&env);
 
-    let bridge_oracle_address = env.register(BridgeOracleContract, ());
+    let bridge_oracle_address = env.register(BridgeOracleContract, (admin.clone(), oracle));
     let bridge_oracle_client = BridgeOracleClient::new(&env, &bridge_oracle_address);
 
-    bridge_oracle_client.initialize(&admin, &oracle);
 
     let new_oracle = Address::generate(&env);
 
