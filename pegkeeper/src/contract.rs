@@ -7,13 +7,6 @@ pub struct PegkeeperContract;
 #[contractclient(name="PegkeeperClient")]
 pub trait Pegkeeper {
 
-    /// Initializes the PegKeeper contract
-    ///
-    /// ### Arguments
-    /// * `treasury` - The Address of the treasury
-    /// * `router` - The address of the soroswap router
-    fn initialize(e: Env, treasury: Address, router: Address);
-
     /// Execute operation
     ///
     /// ### Arguments
@@ -30,20 +23,22 @@ pub trait Pegkeeper {
     fn fl_receive(e: Env, token: Address, amount: i128, blend_pool: Address, auction: Address, collateral_token: Address, lot_amount: i128, liq_amount: i128, amm: Address, min_profit: i128, fee_taker: Address);
 }
 
-#[contractimpl]
-impl Pegkeeper for PegkeeperContract {
+impl PegkeeperContract {
 
-    fn initialize(e: Env, treasury: Address, router: Address) {
-        storage::extend_instance(&e);
-
-        if storage::is_init(&e) {
-            panic_with_error!(&e, PegkeeperError::AlreadyInitializedError);
-        }
-
-        storage::set_router(&e, &router);
+    /// Initializes the PegKeeper contract
+    ///
+    /// ### Arguments
+    /// * `treasury` - The Address of the treasury
+    /// * `router` - The address of the soroswap router
+    pub fn __constructor(e: Env, treasury: Address, router: Address) {
         storage::set_treasury(&e, &treasury);
+        storage::set_router(&e, &router);
         e.events().publish(("Pegkeeper", Symbol::new(&e, "init")), (treasury.clone(), router.clone()));
     }
+}
+
+#[contractimpl]
+impl Pegkeeper for PegkeeperContract {
 
     fn fl_receive(e: Env, token: Address, amount: i128, blend_pool: Address, auction: Address, collateral_token: Address, lot_amount: i128, liq_amount: i128, amm: Address, min_profit: i128, fee_taker: Address) {
         storage::extend_instance(&e);
