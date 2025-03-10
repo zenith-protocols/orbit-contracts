@@ -5,36 +5,6 @@ use soroban_sdk::testutils::{AuthorizedFunction, AuthorizedInvocation};
 use crate::{TreasuryContract, TreasuryClient};
 
 #[test]
-#[should_panic(expected = "Error(Contract, #1501)")] // AlreadyInitializedError
-fn test_initialization() {
-    let env: Env = Default::default();
-    env.mock_all_auths();
-
-    let admin = Address::generate(&env);
-    let factory = Address::generate(&env);
-    let pegkeeper = Address::generate(&env);
-
-    let treasury_address = env.register(TreasuryContract, ());
-    let treasury_client = TreasuryClient::new(&env, &treasury_address);
-
-    treasury_client.initialize(&admin, &factory, &pegkeeper);
-    treasury_client.initialize(&admin, &factory, &pegkeeper);
-}
-
-#[test]
-#[should_panic(expected = "Error(WasmVm, InvalidAction)")] // Fails because no admin is set
-fn test_uninitialized() {
-    let env: Env = Default::default();
-    env.mock_all_auths();
-    env.budget().reset_unlimited();
-
-    let treasury_address = env.register(TreasuryContract, ());
-    let treasury_client = TreasuryClient::new(&env, &treasury_address);
-
-    treasury_client.set_pegkeeper(&Address::generate(&env));
-}
-
-#[test]
 fn test_update_pegkeeper() {
     let env: Env = Default::default();
     env.mock_all_auths();
@@ -44,10 +14,8 @@ fn test_update_pegkeeper() {
     let factory = Address::generate(&env);
     let pegkeeper = Address::generate(&env);
 
-    let treasury_address = env.register(TreasuryContract, ());
+    let treasury_address = env.register(TreasuryContract, (admin.clone(), factory, pegkeeper));
     let treasury_client = TreasuryClient::new(&env, &treasury_address);
-
-    treasury_client.initialize(&admin, &factory, &pegkeeper);
 
     let new_pegkeeper = Address::generate(&env);
 

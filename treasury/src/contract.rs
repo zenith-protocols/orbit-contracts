@@ -79,6 +79,7 @@ pub trait Treasury {
     fn upgrade(e: Env, new_wasm_hash: BytesN<32>);
 }
 
+#[contractimpl]
 impl TreasuryContract {
 
     /// Initialize the treasury
@@ -90,7 +91,7 @@ impl TreasuryContract {
     ///
     /// ### Panics
     /// If the contract is already initialized
-    fn __constructor(e: Env, admin: Address, factory: Address, pegkeeper: Address) {
+    pub fn __constructor(e: Env, admin: Address, factory: Address, pegkeeper: Address) {
         admin.require_auth();
 
         storage::set_pegkeeper(&e, &pegkeeper);
