@@ -14,17 +14,6 @@ pub struct TreasuryContract;
 #[contractclient(name="TreasuryClient")]
 pub trait Treasury {
 
-    /// Initialize the treasury
-    ///
-    /// ### Arguments
-    /// * `admin` - The Address for the admin
-    /// * `factory` - The Address for the blend factory
-    /// * `pegkeeper` - The Address for the pegkeeper
-    ///
-    /// ### Panics
-    /// If the contract is already initialized
-    fn initialize(e: Env, admin: Address, factory: Address, pegkeeper: Address);
-
     /// (Admin only) add a stablecoin
     ///
     /// ### Arguments
@@ -32,7 +21,7 @@ pub trait Treasury {
     /// * `blend_pool` - The Address for the blend pool
     ///
     /// ### Panics
-    /// If the caller is not the admin
+    /// If the caller is not the dao-utils
     fn add_stablecoin(e: Env, token: Address, blend_pool: Address);
 
     /// (Admin only) Increase the supply of the pool
@@ -41,7 +30,7 @@ pub trait Treasury {
     /// * `amount` - The amount to increase the supply by
     ///
     /// ### Panics
-    /// If the caller is not the admin
+    /// If the caller is not the dao-utils
     fn increase_supply(e: Env, token: Address, amount: i128);
 
     /// (Admin only) Decrease the supply of the pool
@@ -50,9 +39,20 @@ pub trait Treasury {
     /// * `amount` - The amount to decrease the supply by
     ///
     /// ### Panics
-    /// If the caller is not the admin
+    /// If the caller is not the dao-utils
     /// If the supply is less than the amount
     fn decrease_supply(e: Env, token: Address, amount: i128);
+
+    /// (Admin only) Claim interest from the blend pool
+    ///
+    /// ### Arguments
+    /// * `pool` - The blend pool to claim interest from
+    /// * `reserve_tokens_id` - The reserve tokens id of the tokens to claim interest from
+    /// * `to` - The address to send the interest to
+    ///
+    /// ### Panics
+    /// If the caller is not the dao-utils
+    fn claim_interest(e: Env, pool: Address, reserve_tokens_id: Vec<u32>, to: Address) -> i128;
 
     /// Flashloan function for keeping the peg of stablecoins
     ///
@@ -70,7 +70,7 @@ pub trait Treasury {
     /// * `pegkeeper` - The new pegkeeper address
     ///
     /// ### Panics
-    /// If the caller is not the admin
+    /// If the caller is not the dao-utils
     fn set_pegkeeper(e: Env, pegkeeper: Address);
 
     /// Updates this contract to a new version
@@ -79,14 +79,19 @@ pub trait Treasury {
     fn upgrade(e: Env, new_wasm_hash: BytesN<32>);
 }
 
-#[contractimpl]
-impl Treasury for TreasuryContract {
+impl TreasuryContract {
 
-    fn initialize(e: Env, admin: Address, factory: Address, pegkeeper: Address) {
-        storage::extend_instance(&e);
-        if storage::is_init(&e) {
-            panic_with_error!(&e, TreasuryError::AlreadyInitializedError);
-        }
+    /// Initialize the treasury
+    ///
+    /// ### Arguments
+    /// * `dao-utils` - The Address for the dao-utils
+    /// * `factory` - The Address for the blend factory
+    /// * `pegkeeper` - The Address for the pegkeeper
+    ///
+    /// ### Panics
+    /// If the contract is already initialized
+    fn __constructor(e: Env, admin: Address, factory: Address, pegkeeper: Address) {
+        admin.require_auth();
 
         storage::set_pegkeeper(&e, &pegkeeper);
         storage::set_factory(&e, &factory);
@@ -94,6 +99,10 @@ impl Treasury for TreasuryContract {
 
         e.events().publish(("Treasury", Symbol::new(&e, "initialize")), (admin.clone(), pegkeeper.clone()));
     }
+}
+
+#[contractimpl]
+impl Treasury for TreasuryContract {
 
     fn add_stablecoin(e: Env, token: Address, blend_pool: Address) {
         storage::extend_instance(&e);
@@ -188,6 +197,18 @@ impl Treasury for TreasuryContract {
 
         token::TokenClient::new(&e, &token).burn(&e.current_contract_address(), &amount);
         e.events().publish(("Treasury", Symbol::new(&e, "decrease_supply")), (token.clone(), amount.clone()));
+    }
+
+    fn claim_interest(e: Env, pool: Address, reserve_tokens_id: Vec<u32>, to: Address) -> i128 {
+        storage::extend_instance(&e);
+        let admin = storage::get_admin(&e);
+        admin.require_auth();
+
+        let tokens_claimed = PoolClient::new(&e, &pool).claim(&e.current_contract_address(), &reserve_tokens_id, &to);
+
+        e.events().publish(("Treasury", Symbol::new(&e, "claim_interest")), (pool.clone(), reserve_tokens_id.clone(), to.clone(), tokens_claimed.clone()));
+
+        tokens_claimed
     }
 
     fn keep_peg(e: Env, name: Symbol, args: Vec<Val>) {
