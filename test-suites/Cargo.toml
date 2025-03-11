@@ -24,4 +24,4 @@ mock-treasury = { path = "../mocks/mock-treasury", features = ["testutils"] }
 bridge-oracle = { path = "../bridge-oracle", features = ["testutils"] }
 pegkeeper = { path = "../pegkeeper", features = ["testutils"] }
 mock-pegkeeper = { path = "../mocks/mock-pegkeeper", features = ["testutils"] }
-admin = { path = "../admin", features = ["testutils"] }
+dao-utils = { path = "../dao-utils", features = ["testutils"] }

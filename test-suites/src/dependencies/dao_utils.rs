@@ -1,8 +1,8 @@
 use soroban_sdk::{testutils::Address as _, Address, Env};
-mod admin_contract {
+mod dao_utils_contract {
     use::bridge_oracle::Asset;
 
-    soroban_sdk::contractimport!(file = "../wasm/orbit/admin.wasm");
+    soroban_sdk::contractimport!(file = "../wasm/orbit/dao_utils.wasm");
 }
 
 pub use admin::{AdminClient, AdminContract};

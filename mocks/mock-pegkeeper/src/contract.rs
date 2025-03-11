@@ -11,7 +11,7 @@ pub trait MockPegkeepeer {
     /// Initialize the treasury
     ///
     /// ### Arguments
-    /// * `admin` - The Address for the admin
+    /// * `dao-utils` - The Address for the dao-utils
     /// * `maximum_duration` - The maximum_duration for swap transaction
     fn initialize(e: Env, admin: Address, router: Address);
 

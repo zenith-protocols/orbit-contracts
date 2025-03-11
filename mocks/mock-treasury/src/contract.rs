@@ -13,7 +13,7 @@ pub trait MockTreasury {
     /// Initialize the treasury
     ///
     /// ### Arguments
-    /// * `admin` - The Address for the admin
+    /// * `dao-utils` - The Address for the dao-utils
     /// * `token` - The Address for the token
     /// * `pegkeeper` - The Address for the pegkeeper
     ///
@@ -28,7 +28,7 @@ pub trait MockTreasury {
     /// * `blend_pool` - The Address for the blend pool
     ///
     /// ### Panics
-    /// If the caller is not the admin
+    /// If the caller is not the dao-utils
     fn add_stablecoin(e: Env, token: Address, blend_pool: Address);
 
     /// (Admin only) Increase the supply of the pool
@@ -37,7 +37,7 @@ pub trait MockTreasury {
     /// * `amount` - The amount to increase the supply by
     ///
     /// ### Panics
-    /// If the caller is not the admin
+    /// If the caller is not the dao-utils
     fn increase_supply(e: Env, token: Address, amount: i128);
 
     /// (Admin only) Decrease the supply of the pool
@@ -46,7 +46,7 @@ pub trait MockTreasury {
     /// * `amount` - The amount to decrease the supply by
     ///
     /// ### Panics
-    /// If the caller is not the admin
+    /// If the caller is not the dao-utils
     /// If the supply is less than the amount
     fn decrease_supply(e: Env, token: Address, amount: i128);
 
@@ -66,7 +66,7 @@ pub trait MockTreasury {
     /// * `pegkeeper` - The new pegkeeper address
     ///
     /// ### Panics
-    /// If the caller is not the admin
+    /// If the caller is not the dao-utils
     fn set_pegkeeper(e: Env, pegkeeper: Address);
 }
 

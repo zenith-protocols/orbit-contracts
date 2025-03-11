@@ -10,7 +10,6 @@ impl DaoUtilsContract {
     fn new_stablecoin(e: Env, admin: Address, treasury: Address, oracle: Address, token: Address, asset: Asset, blend_pool: Address, initial_supply: i128) {
         admin.require_auth();
 
-        let treasury = storage::get_treasury(&e);
         let treasury_client = TreasuryClient::new(&e, &treasury);
         let bridge_oracle = BridgeOracleClient::new(&e, &oracle);
         let token_asset = Asset::Stellar(token.clone());

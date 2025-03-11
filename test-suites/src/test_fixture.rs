@@ -23,7 +23,7 @@ use soroban_sdk::{vec as svec, Address, BytesN, Env, String, Map, Symbol};
 use crate::dependencies::pair::{PAIR_WASM, PairClient};
 use crate::dependencies::pair_factory::{PairFactoryClient, create_pair_factory};
 use crate::dependencies::router::{RouterClient, create_router};
-use crate::dependencies::admin::{AdminClient, create_admin};
+use crate::dependencies::dao_utils::{AdminClient, create_admin};
 use crate::dependencies::bridge_oracle::{BridgeOracleClient, create_bridge_oracle};
 use crate::dependencies::treasury::{TreasuryClient, create_treasury};
 use crate::dependencies::mock_treasury::{MockTreasuryClient, create_mock_treasury};
