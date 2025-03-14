@@ -5,8 +5,7 @@ mod pair_factory_contract {
 }
 pub use pair_factory_contract::{Client as PairFactoryClient, WASM as PAIR_FACTORY_WASM};
 
-pub fn create_pair_factory<'a>(e: &Env) -> (Address, PairFactoryClient<'a>) {
-    let contract_id = Address::generate(e);
+pub fn create_pair_factory<'a>(e: &Env, contract_id: &Address) -> PairFactoryClient<'a> {
     e.register_at(&contract_id, PAIR_FACTORY_WASM, ());
-    (contract_id.clone(), PairFactoryClient::new(e, &contract_id))
+    PairFactoryClient::new(e, &contract_id)
 }

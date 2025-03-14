@@ -5,14 +5,13 @@ mod dao_utils_contract {
     soroban_sdk::contractimport!(file = "../wasm/orbit/dao_utils.wasm");
 }
 
-pub use admin::{AdminClient, AdminContract};
+pub use dao_utils::{DaoUtilsClient, DaoUtilsContract};
 
-pub fn create_admin<'a>(e: &Env, wasm: bool) -> (Address, AdminClient<'a>) {
-    let contract_id = Address::generate(e);
+pub fn create_dao_utils<'a>(e: &Env, contract_id: &Address, wasm: bool) -> DaoUtilsClient<'a> {
     if wasm {
-        e.register_at(&contract_id, admin_contract::WASM, ());
+        e.register_at(&contract_id, dao_utils_contract::WASM, ());
     } else {
-        e.register_at(&contract_id, AdminContract {}, ());
+        e.register_at(&contract_id, DaoUtilsContract {}, ());
     }
-    (contract_id.clone(), AdminClient::new(e, &contract_id))
+    DaoUtilsClient::new(e, &contract_id)
 }

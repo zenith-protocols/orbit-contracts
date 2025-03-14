@@ -4,7 +4,7 @@ use crate::{
     dependencies::pool::{ReserveEmissionMetadata},
     test_fixture::{TestFixture, TokenIndex, SCALAR_7},
 };
-use admin::dependencies::bridge_oracle::Asset;
+use dao_utils::dependencies::bridge_oracle::Asset;
 use crate::dependencies::pool::ReserveConfig;
 
 /// Create a test fixture with a pool and a whale depositing and borrowing all assets
@@ -30,7 +30,7 @@ pub fn create_fixture_with_data<'a>(mock: bool, wasm: bool) -> TestFixture<'a> {
         &frodo,
     );
 
-    fixture.create_pool(String::from_str(&fixture.env, "Teapot"), 2000000, 4);
+    fixture.create_pool(String::from_str(&fixture.env, "Teapot"), 2000000, 4, 1_0000000);
 
     let xlm_config = ReserveConfig {
         decimals: 7,
@@ -44,6 +44,8 @@ pub fn create_fixture_with_data<'a>(mock: bool, wasm: bool) -> TestFixture<'a> {
         r_three: 0,
         reactivity: 0,
         index: 0,
+        collateral_cap: 1000000000000000000,
+        enabled: true,
     };
 
     let ousd_config = ReserveConfig {
@@ -58,6 +60,8 @@ pub fn create_fixture_with_data<'a>(mock: bool, wasm: bool) -> TestFixture<'a> {
         r_three: 50_0000,
         reactivity: 40, // 2e-5
         index: 1,
+        collateral_cap: 1000000000000000000,
+        enabled: true,
     };
 
     fixture.create_pool_reserve(0, TokenIndex::XLM, &xlm_config);
@@ -84,16 +88,16 @@ pub fn create_fixture_with_data<'a>(mock: bool, wasm: bool) -> TestFixture<'a> {
     fixture
         .backstop
         .deposit(&frodo, &pool_fixture.pool.address, &(50_000 * SCALAR_7));
-    fixture.backstop.update_tkn_val();
     fixture
         .backstop
-        .add_reward(&pool_fixture.pool.address, &Address::generate(&fixture.env));
+        .add_reward(&pool_fixture.pool.address, &None);
+
     pool_fixture.pool.set_status(&0);
     pool_fixture.pool.update_status();
     // enable emissions
     fixture.emitter.distribute();
-    fixture.backstop.gulp_emissions();
-    pool_fixture.pool.gulp_emissions();
+    fixture.backstop.distribute();
+    //pool_fixture.pool.gulp_emissions();
 
     fixture.jump(60);
 
@@ -101,17 +105,21 @@ pub fn create_fixture_with_data<'a>(mock: bool, wasm: bool) -> TestFixture<'a> {
     let token: Address = fixture.tokens[TokenIndex::OUSD].address.clone();
     let asset: Asset = Asset::Other(Symbol::new(&fixture.env, "USD"));
     let initial_supply: i128 = 1_000_000 * SCALAR_7;
+    let treasury_id: Address;
     if mock {
-        fixture.tokens[TokenIndex::OUSD].set_admin(&fixture.mock_treasury.address);
+        treasury_id = fixture.mock_treasury.address.clone();
+        fixture.tokens[TokenIndex::OUSD].set_admin(&treasury_id);
+
     } else {
-        fixture.tokens[TokenIndex::OUSD].set_admin(&fixture.treasury.address);
+        treasury_id = fixture.treasury.address.clone();
+        fixture.tokens[TokenIndex::OUSD].set_admin(&treasury_id);
     }
 
-    fixture.admin_contract.new_stablecoin(&token, &asset, &pool_fixture.pool.address, &initial_supply);
+    fixture.dao_utils.new_stablecoin(&fixture.admin, &treasury_id, &fixture.bridge_oracle.address, &token, &asset, &pool_fixture.pool.address, &initial_supply);
 
     fixture.jump(60 * 60); // 1 hr
 
-    fixture.env.budget().reset_unlimited();
+    fixture.env.cost_estimate().budget().reset_unlimited();
     fixture
 }
 

@@ -23,6 +23,7 @@ pub trait Pegkeeper {
     fn fl_receive(e: Env, token: Address, amount: i128, blend_pool: Address, auction: Address, collateral_token: Address, lot_amount: i128, liq_amount: i128, amm: Address, min_profit: i128, fee_taker: Address);
 }
 
+#[contractimpl]
 impl PegkeeperContract {
 
     /// Initializes the PegKeeper contract

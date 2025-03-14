@@ -16,13 +16,13 @@ pub use lp_contract::{Client as LPClient, WASM as LP_WASM};
 /// - Shares: 100
 pub(crate) fn create_lp_pool<'a>(
     e: &Env,
+    contract_id: &Address,
     admin: &Address,
     token_1: &Address,
     token_2: &Address,
-) -> (Address, LPClient<'a>) {
-    let contract_address = Address::generate(e);
-    e.register_at(&contract_address, LP_WASM, ());
-    let client = LPClient::new(e, &contract_address);
+) -> LPClient<'a> {
+    e.register_at(&contract_id, LP_WASM, ());
+    let client = LPClient::new(e, &contract_id);
 
     let token_1_client = MockTokenClient::new(e, token_1);
     let token_2_client = MockTokenClient::new(e, token_2);
@@ -37,5 +37,5 @@ pub(crate) fn create_lp_pool<'a>(
         &0_0030000,
     );
 
-    (contract_address, client)
+    client
 }

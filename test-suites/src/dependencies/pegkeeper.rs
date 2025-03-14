@@ -6,12 +6,11 @@ mod pegkeeper_contract {
 
 pub use pegkeeper::{PegkeeperClient, PegkeeperContract};
 
-pub fn create_pegkeeper<'a>(e: &Env, wasm: bool) -> (Address, PegkeeperClient<'a>) {
-    let contract_id = Address::generate(e);
+pub fn create_pegkeeper<'a>(e: &Env, contract_id: &Address, wasm: bool, treasury: &Address, router: &Address) -> PegkeeperClient<'a> {
     if wasm {
-        e.register_at(&contract_id, pegkeeper_contract::WASM, ());
+        e.register_at(&contract_id, pegkeeper_contract::WASM, (treasury, router));
     } else {
-        e.register_at(&contract_id, PegkeeperContract {}, ());
+        e.register_at(&contract_id, PegkeeperContract {}, (treasury, router));
     }
-    (contract_id.clone(), PegkeeperClient::new(e, &contract_id))
+    PegkeeperClient::new(e, &contract_id)
 }
