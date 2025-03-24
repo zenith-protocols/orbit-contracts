@@ -14,6 +14,7 @@ pub enum TreasuryDataKey {
     BLENDPOOL(Address),
     FACTORY,
     PEGKEEPER,
+    TOTALSUPPLY(Address),
 }
 
 pub fn extend_instance(e: &Env) {
@@ -75,4 +76,17 @@ pub fn set_blend_pool(e: &Env, token_address: &Address, blend_pool: &Address) {
     let key = TreasuryDataKey::BLENDPOOL(token_address.clone());
     e.storage().persistent().set::<TreasuryDataKey, Address>(&key, blend_pool);
     e.storage().persistent().extend_ttl(&key, LEDGER_THRESHOLD_PERSISTANT, LEDGER_BUMP_PERSISTANT);
+}
+
+pub fn get_total_supply(e: &Env, reserve_address: &Address) -> i128 {
+    e.storage()
+        .instance()
+        .get(&TreasuryDataKey::TOTALSUPPLY(reserve_address.clone()))
+        .unwrap_or(0)
+}
+
+pub fn set_total_supply(e: &Env, reserve_address: &Address, new_total_supply: &i128) {
+    e.storage()
+        .instance()
+        .set(&TreasuryDataKey::TOTALSUPPLY(reserve_address.clone()), new_total_supply);
 }
