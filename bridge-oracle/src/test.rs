@@ -92,15 +92,18 @@ fn test_update_oracle() {
     env.budget().reset_unlimited();
 
     let admin = Address::generate(&env);
-    let oracle = Address::generate(&env);
+    let stellar_oracle = Address::generate(&env);
+    let other_oracle = Address::generate(&env);
 
-    let bridge_oracle_address = env.register(BridgeOracleContract, (admin.clone(), oracle));
+    let bridge_oracle_address = env.register(BridgeOracleContract, (admin.clone(), stellar_oracle, other_oracle));
     let bridge_oracle_client = BridgeOracleClient::new(&env, &bridge_oracle_address);
 
 
-    let new_oracle = Address::generate(&env);
+    let new_stellar_oracle = Address::generate(&env);
+    let new_other_oracle = Address::generate(&env);
 
-    bridge_oracle_client.set_oracle(&new_oracle);
+    bridge_oracle_client.set_stellar_oracle(&new_stellar_oracle);
+    bridge_oracle_client.set_other_oracle(&new_other_oracle);
     assert_eq!(
         env.auths(),
         std::vec![(
@@ -108,8 +111,23 @@ fn test_update_oracle() {
             AuthorizedInvocation {
                 function: AuthorizedFunction::Contract((
                     bridge_oracle_address.clone(),
-                    Symbol::new(&env, "set_oracle"),
-                    (new_oracle.clone(),).into_val(&env),
+                    Symbol::new(&env, "set_stellar_oracle"),
+                    (new_stellar_oracle.clone(),).into_val(&env),
+                )),
+                sub_invocations: std::vec![]
+            }
+        )]
+    );
+
+    assert_eq!(
+        env.auths(),
+        std::vec![(
+            admin.clone(),
+            AuthorizedInvocation {
+                function: AuthorizedFunction::Contract((
+                    bridge_oracle_address.clone(),
+                    Symbol::new(&env, "set_stellar_oracle"),
+                    (new_other_oracle.clone(),).into_val(&env),
                 )),
                 sub_invocations: std::vec![]
             }

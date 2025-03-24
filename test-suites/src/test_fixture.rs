@@ -188,7 +188,7 @@ impl TestFixture<'_> {
 
         // Deploy orbit dependencies
         let dao_utils_client = create_dao_utils(&e, &dao_utils_id, wasm);
-        let bridge_oracle_client = create_bridge_oracle(&e, &bridge_oracle_id, wasm, &admin, &mock_oracle_id);
+        let bridge_oracle_client = create_bridge_oracle(&e, &bridge_oracle_id, wasm, &admin, &mock_oracle_id, &mock_oracle_id);
         let treasury_client = create_treasury(&e, &treasury_id, wasm, &admin, &pool_factory_id, &pegkeeper_id);
         let (mock_treasury_id, mock_treasury_client) = create_mock_treasury(&e, wasm);
         let pegkeeper_client = create_pegkeeper(&e, &pegkeeper_id, wasm, &treasury_id, &router_id);
