@@ -1,7 +1,5 @@
 use soroban_sdk::{testutils::Address as _, Address, Env};
-mod dao_utils_contract {
-    use::bridge_oracle::Asset;
-
+mod dao_utils {
     soroban_sdk::contractimport!(file = "../wasm/orbit/dao_utils.wasm");
 }
 

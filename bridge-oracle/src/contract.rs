@@ -100,7 +100,7 @@ impl BridgeOracle for BridgeOracleContract {
         let stellar_oracle = storage::get_stellar_oracle(&env);
         let other_oracle = storage::get_other_oracle(&env);
 
-        match asset {
+        match to_asset.clone() {
             Asset::Stellar(a) => {
                 let args: Vec<Val> = vec![&env, to_asset.into_val(&env)];
                 env.invoke_contract::<Option<PriceData>>(&stellar_oracle, &Symbol::new(&env, "lastprice"), args)
