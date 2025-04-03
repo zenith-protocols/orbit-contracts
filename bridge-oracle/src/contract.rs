@@ -108,7 +108,7 @@ impl BridgeOracle for BridgeOracleContract {
             Asset::Other(a) => {
                 if a == Symbol::new(&env, "USD") {
                     let timestamp = env.ledger().timestamp();
-                    Some(PriceData {price: 1, timestamp})
+                    Some(PriceData {price: 1_00_000_000_000_000, timestamp})
                 }
                 else {
                     let args: Vec<Val> = vec![&env, to_asset.into_val(&env)];
