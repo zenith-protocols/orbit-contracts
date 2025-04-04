@@ -80,10 +80,12 @@ pub fn set_blend_pool(e: &Env, token_address: &Address, blend_pool: &Address) {
 
 pub fn get_total_supply(e: &Env, reserve_address: &Address) -> i128 {
     let key = TreasuryDataKey::TOTALSUPPLY(reserve_address.clone());
-
-    let total_supply = e.storage().persistent().get::<TreasuryDataKey, i128>(&key).unwrap_or(0);
-
-    e.storage().persistent().extend_ttl(&key, LEDGER_THRESHOLD_PERSISTANT, LEDGER_BUMP_PERSISTANT);
+    let total_supply = if let Some(result) = e.storage().persistent().get::<TreasuryDataKey, i128>(&key) {
+        e.storage().persistent().extend_ttl(&key, LEDGER_THRESHOLD_PERSISTANT, LEDGER_BUMP_PERSISTANT);
+        result
+    } else {
+        0
+    };
 
     total_supply
 }
