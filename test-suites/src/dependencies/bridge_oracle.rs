@@ -5,12 +5,11 @@ mod bridge_oracle_contract {
 
 pub use bridge_oracle::{BridgeOracleClient, BridgeOracleContract};
 
-pub fn create_bridge_oracle<'a>(e: &Env, wasm: bool) -> (Address, BridgeOracleClient<'a>) {
-    let contract_id = Address::generate(e);
+pub fn create_bridge_oracle<'a>(e: &Env, contract_id: &Address,  wasm: bool, admin: &Address, stellar_oracle: &Address, other_oracle: &Address) -> BridgeOracleClient<'a> {
     if wasm {
-        e.register_at(&contract_id, bridge_oracle_contract::WASM, ());
+        e.register_at(&contract_id, bridge_oracle_contract::WASM, (admin, stellar_oracle, other_oracle));
     } else {
-        e.register_at(&contract_id, BridgeOracleContract {}, ());
+        e.register_at(&contract_id, BridgeOracleContract {}, (admin, stellar_oracle, other_oracle));
     }
-    (contract_id.clone(), BridgeOracleClient::new(e, &contract_id))
+    BridgeOracleClient::new(e, &contract_id)
 }

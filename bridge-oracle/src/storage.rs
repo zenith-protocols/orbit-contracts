@@ -12,7 +12,8 @@ const LEDGER_BUMP_PERSISTANT: u32 = LEDGER_THRESHOLD_PERSISTANT + 20 * ONE_DAY_L
 #[contracttype]
 pub enum BridgeOracleDataKey {
     ADMIN,
-    ORACLE,
+    StellarOracle,
+    OtherOracle,
     BRIDGE(Asset),
 }
 
@@ -21,8 +22,6 @@ pub fn extend_instance(env: &Env) {
         .instance()
         .extend_ttl(LEDGER_THRESHOLD_INSTANCE, LEDGER_BUMP_INSTANCE);
 }
-
-pub fn is_init(e: &Env) -> bool { e.storage().instance().has(&BridgeOracleDataKey::ADMIN) }
 
 pub fn get_admin(e: &Env) -> Address {
     e.storage()
@@ -53,15 +52,29 @@ pub fn set_bridge_asset(env: &Env, asset: &Asset, to: &Asset) {
     env.storage().persistent().extend_ttl(&key, LEDGER_THRESHOLD_PERSISTANT, LEDGER_BUMP_PERSISTANT);
 }
 
-pub fn get_oracle(env: &Env) -> Address {
+pub fn get_stellar_oracle(env: &Env) -> Address {
     env.storage()
         .instance()
-        .get(&BridgeOracleDataKey::ORACLE)
+        .get(&BridgeOracleDataKey::StellarOracle)
         .unwrap_optimized()
 }
 
-pub fn set_oracle(env: &Env, address: &Address) {
+pub fn get_other_oracle(env: &Env) -> Address {
     env.storage()
         .instance()
-        .set(&BridgeOracleDataKey::ORACLE, address);
+        .get(&BridgeOracleDataKey::OtherOracle)
+        .unwrap_optimized()
+}
+
+
+pub fn set_stellar_oracle(env: &Env, address: &Address) {
+    env.storage()
+        .instance()
+        .set(&BridgeOracleDataKey::StellarOracle, address);
+}
+
+pub fn set_other_oracle(env: &Env, address: &Address) {
+    env.storage()
+        .instance()
+        .set(&BridgeOracleDataKey::OtherOracle, address);
 }

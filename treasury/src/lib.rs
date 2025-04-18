@@ -4,6 +4,7 @@ extern crate std;
 
 mod storage;
 mod contract;
+mod constants;
 mod errors;
 mod dependencies;
 #[cfg(test)]

@@ -3,6 +3,8 @@ use crate::dependencies::pool::{Client as PoolClient, Request};
 use crate::dependencies::pool_factory::{Client as PoolFactoryClient};
 use soroban_sdk::{contract, contractclient, contractimpl, panic_with_error, token, vec, Address, BytesN, Env, IntoVal, Symbol, TryFromVal, Val, Vec};
 use soroban_sdk::auth::{ContractContext, InvokerContractAuthEntry, SubContractInvocation};
+use soroban_fixed_point_math::{i128, FixedPoint};
+use crate::constants::SCALAR_12;
 use crate::errors::TreasuryError;
 
 const REQUEST_TYPE_SUPPLY: u32 = 0;
@@ -14,17 +16,6 @@ pub struct TreasuryContract;
 #[contractclient(name="TreasuryClient")]
 pub trait Treasury {
 
-    /// Initialize the treasury
-    ///
-    /// ### Arguments
-    /// * `admin` - The Address for the admin
-    /// * `factory` - The Address for the blend factory
-    /// * `pegkeeper` - The Address for the pegkeeper
-    ///
-    /// ### Panics
-    /// If the contract is already initialized
-    fn initialize(e: Env, admin: Address, factory: Address, pegkeeper: Address);
-
     /// (Admin only) add a stablecoin
     ///
     /// ### Arguments
@@ -32,7 +23,7 @@ pub trait Treasury {
     /// * `blend_pool` - The Address for the blend pool
     ///
     /// ### Panics
-    /// If the caller is not the admin
+    /// If the caller is not the dao-utils
     fn add_stablecoin(e: Env, token: Address, blend_pool: Address);
 
     /// (Admin only) Increase the supply of the pool
@@ -41,7 +32,7 @@ pub trait Treasury {
     /// * `amount` - The amount to increase the supply by
     ///
     /// ### Panics
-    /// If the caller is not the admin
+    /// If the caller is not the dao-utils
     fn increase_supply(e: Env, token: Address, amount: i128);
 
     /// (Admin only) Decrease the supply of the pool
@@ -50,9 +41,20 @@ pub trait Treasury {
     /// * `amount` - The amount to decrease the supply by
     ///
     /// ### Panics
-    /// If the caller is not the admin
+    /// If the caller is not the dao-utils
     /// If the supply is less than the amount
     fn decrease_supply(e: Env, token: Address, amount: i128);
+
+    /// (Admin only) Claim interest from the blend pool
+    ///
+    /// ### Arguments
+    /// * `pool` - The blend pool to claim interest from
+    /// * `reserve_tokens_id` - The reserve tokens id of the tokens to claim interest from
+    /// * `to` - The address to send the interest to
+    ///
+    /// ### Panics
+    /// If the caller is not the dao-utils
+    fn claim_interest(e: Env, pool: Address, reserve_address: Address, to: Address) -> i128;
 
     /// Flashloan function for keeping the peg of stablecoins
     ///
@@ -70,7 +72,7 @@ pub trait Treasury {
     /// * `pegkeeper` - The new pegkeeper address
     ///
     /// ### Panics
-    /// If the caller is not the admin
+    /// If the caller is not the dao-utils
     fn set_pegkeeper(e: Env, pegkeeper: Address);
 
     /// Updates this contract to a new version
@@ -80,13 +82,19 @@ pub trait Treasury {
 }
 
 #[contractimpl]
-impl Treasury for TreasuryContract {
+impl TreasuryContract {
 
-    fn initialize(e: Env, admin: Address, factory: Address, pegkeeper: Address) {
-        storage::extend_instance(&e);
-        if storage::is_init(&e) {
-            panic_with_error!(&e, TreasuryError::AlreadyInitializedError);
-        }
+    /// Initialize the treasury
+    ///
+    /// ### Arguments
+    /// * `dao-utils` - The Address for the dao-utils
+    /// * `factory` - The Address for the blend factory
+    /// * `pegkeeper` - The Address for the pegkeeper
+    ///
+    /// ### Panics
+    /// If the contract is already initialized
+    pub fn __constructor(e: Env, admin: Address, factory: Address, pegkeeper: Address) {
+        admin.require_auth();
 
         storage::set_pegkeeper(&e, &pegkeeper);
         storage::set_factory(&e, &factory);
@@ -94,6 +102,10 @@ impl Treasury for TreasuryContract {
 
         e.events().publish(("Treasury", Symbol::new(&e, "initialize")), (admin.clone(), pegkeeper.clone()));
     }
+}
+
+#[contractimpl]
+impl Treasury for TreasuryContract {
 
     fn add_stablecoin(e: Env, token: Address, blend_pool: Address) {
         storage::extend_instance(&e);
@@ -150,9 +162,13 @@ impl Treasury for TreasuryContract {
             Request {
                 request_type: REQUEST_TYPE_SUPPLY,
                 address: token.clone(),
-                amount,
+                amount: amount.clone(),
             },
         ]);
+        
+        let mut total_supply = storage::get_total_supply(&e, &token.clone());
+        total_supply += amount as i128;
+        storage::set_total_supply(&e, &token.clone(), &total_supply);
 
         e.events().publish(("Treasury", Symbol::new(&e, "increase_supply")), (token.clone(), amount.clone()));
     }
@@ -186,8 +202,54 @@ impl Treasury for TreasuryContract {
             panic_with_error!(e, TreasuryError::NotEnoughSupplyError);
         }
 
+        let mut total_supply = storage::get_total_supply(&e, &token.clone());
+        total_supply -= amount as i128;
+        if total_supply < 0 {
+            panic_with_error!(e, TreasuryError::NotEnoughSupplyError);
+        }
+        storage::set_total_supply(&e, &token.clone(), &total_supply);
+
         token::TokenClient::new(&e, &token).burn(&e.current_contract_address(), &amount);
         e.events().publish(("Treasury", Symbol::new(&e, "decrease_supply")), (token.clone(), amount.clone()));
+    }
+
+    fn claim_interest(e: Env, pool: Address, reserve_address: Address, to: Address) -> i128 {
+        storage::extend_instance(&e);
+    
+        let admin = storage::get_admin(&e);
+        admin.require_auth();
+
+        // Get pool client and retrieve reserve data
+        let pool_client = PoolClient::new(&e, &pool);
+        let reserve = pool_client.get_reserve(&reserve_address);
+        let b_rate = reserve.data.b_rate;
+        
+        // Get the token position and calculate the underlying interest
+        let position = pool_client.get_positions(&e.current_contract_address());
+        let b_token = position.supply.get(reserve.config.index).unwrap_or(0);
+        let underlying = b_token.fixed_mul_floor(b_rate, SCALAR_12).unwrap();
+        
+        let interest = underlying - storage::get_total_supply(&e, &reserve_address.clone());
+
+        // Check if interest is positive
+        if interest <= 0 {
+            panic_with_error!(e, TreasuryError::NoInterestToClaim);
+        }
+
+        // Submit request to pool for withdrawing the interest
+        pool_client.submit(&e.current_contract_address(), &e.current_contract_address(), &to, &vec![
+            &e,
+            Request {
+                request_type: REQUEST_TYPE_WITHDRAW,
+                address: reserve_address.clone(),
+                amount: interest,
+            },
+        ]);
+
+        // Publish event for claiming interest
+        e.events().publish(("Treasury", Symbol::new(&e, "claim_interest")), (pool.clone(), reserve_address.clone(), to.clone(), interest.clone()));
+
+        interest
     }
 
     fn keep_peg(e: Env, name: Symbol, args: Vec<Val>) {

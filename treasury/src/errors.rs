@@ -11,4 +11,5 @@ pub enum TreasuryError {
     BlendPoolNotFoundError = 1506,
     AlreadyAddedError = 1507,
     InvalidBlendPoolError = 1508,
+    NoInterestToClaim = 1509,    
 }

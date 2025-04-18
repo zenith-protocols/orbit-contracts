@@ -17,8 +17,6 @@ pub fn extend_instance(e: &Env) {
         .extend_ttl(LEDGER_THRESHOLD_INSTANCE, LEDGER_BUMP_INSTANCE);
 }
 
-pub fn is_init(e: &Env) -> bool { e.storage().instance().has(&PegkeeperDataKey::TREASURY) }
-
 pub fn get_treasury(e: &Env) -> Address {
     e.storage()
         .instance()

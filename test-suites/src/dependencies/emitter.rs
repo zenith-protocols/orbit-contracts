@@ -5,8 +5,7 @@ mod emitter_contract {
 }
 pub use emitter_contract::{Client as EmitterClient, WASM as EmitterWASM};
 
-pub fn create_emitter<'a>(e: &Env) -> (Address, EmitterClient<'a>) {
-    let contract_id = Address::generate(e);
+pub fn create_emitter<'a>(e: &Env, contract_id: &Address) -> EmitterClient<'a> {
     e.register_at(&contract_id, EmitterWASM, ());
-    (contract_id.clone(), EmitterClient::new(e, &contract_id))
+    EmitterClient::new(e, &contract_id)
 }
