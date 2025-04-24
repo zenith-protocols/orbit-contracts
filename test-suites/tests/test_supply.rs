@@ -10,7 +10,7 @@ fn test_increase_supply() {
     let ousd_balance = fixture.tokens[TokenIndex::OUSD].balance(&pool_fixture.pool.address);
 
     let amount = 100_000;
-    fixture.admin_contract.update_supply(&fixture.tokens[TokenIndex::OUSD].address.clone(), &amount);
+    fixture.dao_utils.update_supply(&fixture.admin, &fixture.treasury.address.clone(), &fixture.tokens[TokenIndex::OUSD].address.clone(), &amount);
 
     assert_eq!(
         ousd_balance + amount,
@@ -27,7 +27,7 @@ fn test_decrease_supply() {
     let ousd_balance = fixture.tokens[TokenIndex::OUSD].balance(&pool_fixture.pool.address);
 
     let amount = -100_000;
-    fixture.admin_contract.update_supply(&fixture.tokens[TokenIndex::OUSD].address.clone(), &amount);
+    fixture.dao_utils.update_supply(&fixture.admin, &fixture.treasury.address.clone(), &fixture.tokens[TokenIndex::OUSD].address.clone(), &amount);
 
     assert_eq!(
         ousd_balance + amount,
@@ -45,7 +45,7 @@ fn test_not_enough_supply() {
     let ousd_balance = fixture.tokens[TokenIndex::OUSD].balance(&pool_fixture.pool.address);
 
     let amount = -ousd_balance - 100_000_000_000;
-    fixture.admin_contract.update_supply(&fixture.tokens[TokenIndex::OUSD].address.clone(), &amount);
+    fixture.dao_utils.update_supply(&fixture.admin, &fixture.treasury.address.clone(), &fixture.tokens[TokenIndex::OUSD].address.clone(), &amount);
 }
 
 #[test]
@@ -54,5 +54,5 @@ fn test_zero_amount() {
     let fixture = create_fixture_with_data(false, false);
 
     let amount = 0;
-    fixture.admin_contract.update_supply(&fixture.tokens[TokenIndex::OUSD].address.clone(), &amount);
+    fixture.dao_utils.update_supply(&fixture.admin, &fixture.treasury.address.clone(), &fixture.tokens[TokenIndex::OUSD].address.clone(), &amount);
 }

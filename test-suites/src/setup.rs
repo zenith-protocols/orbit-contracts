@@ -1,4 +1,4 @@
-use soroban_sdk::{testutils::{Address as _}, vec as svec, Address, String, Symbol};
+use soroban_sdk::{vec as svec, Address, String, Symbol};
 
 use crate::{
     dependencies::pool::{ReserveEmissionMetadata},

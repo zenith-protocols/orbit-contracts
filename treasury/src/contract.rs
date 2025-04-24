@@ -4,11 +4,8 @@ use crate::dependencies::pool_factory::{Client as PoolFactoryClient};
 use soroban_sdk::{contract, contractclient, contractimpl, panic_with_error, token, vec, Address, BytesN, Env, IntoVal, Symbol, TryFromVal, Val, Vec};
 use soroban_sdk::auth::{ContractContext, InvokerContractAuthEntry, SubContractInvocation};
 use soroban_fixed_point_math::{i128, FixedPoint};
-use crate::constants::SCALAR_12;
+use crate::constants::{REQUEST_TYPE_SUPPLY, REQUEST_TYPE_WITHDRAW, SCALAR_12};
 use crate::errors::TreasuryError;
-
-const REQUEST_TYPE_SUPPLY: u32 = 0;
-const REQUEST_TYPE_WITHDRAW: u32 = 1;
 
 #[contract]
 pub struct TreasuryContract;
@@ -54,7 +51,7 @@ pub trait Treasury {
     ///
     /// ### Panics
     /// If the caller is not the dao-utils
-    fn claim_interest(e: Env, pool: Address, reserve_address: Address, to: Address) -> i128;
+    fn claim(e: Env, reserve_address: Address, to: Address) -> i128;
 
     /// Flashloan function for keeping the peg of stablecoins
     ///
@@ -204,39 +201,34 @@ impl Treasury for TreasuryContract {
 
         let mut total_supply = storage::get_total_supply(&e, &token.clone());
         total_supply -= amount as i128;
-        if total_supply < 0 {
-            panic_with_error!(e, TreasuryError::NotEnoughSupplyError);
-        }
         storage::set_total_supply(&e, &token.clone(), &total_supply);
 
         token::TokenClient::new(&e, &token).burn(&e.current_contract_address(), &amount);
         e.events().publish(("Treasury", Symbol::new(&e, "decrease_supply")), (token.clone(), amount.clone()));
     }
 
-    fn claim_interest(e: Env, pool: Address, reserve_address: Address, to: Address) -> i128 {
+    fn claim(e: Env, reserve_address: Address, to: Address) -> i128 {
         storage::extend_instance(&e);
     
         let admin = storage::get_admin(&e);
         admin.require_auth();
 
-        // Get pool client and retrieve reserve data
-        let pool_client = PoolClient::new(&e, &pool);
+        let blend_pool = storage::get_blend_pool(&e, &reserve_address).unwrap_or_else(|| {
+            panic_with_error!(e, TreasuryError::BlendPoolNotFoundError);
+        });
+        let pool_client = PoolClient::new(&e, &blend_pool);
         let reserve = pool_client.get_reserve(&reserve_address);
         let b_rate = reserve.data.b_rate;
-        
-        // Get the token position and calculate the underlying interest
         let position = pool_client.get_positions(&e.current_contract_address());
+
         let b_token = position.supply.get(reserve.config.index).unwrap_or(0);
         let underlying = b_token.fixed_mul_floor(b_rate, SCALAR_12).unwrap();
-        
         let interest = underlying - storage::get_total_supply(&e, &reserve_address.clone());
 
-        // Check if interest is positive
         if interest <= 0 {
             panic_with_error!(e, TreasuryError::NoInterestToClaim);
         }
 
-        // Submit request to pool for withdrawing the interest
         pool_client.submit(&e.current_contract_address(), &e.current_contract_address(), &to, &vec![
             &e,
             Request {
@@ -246,9 +238,7 @@ impl Treasury for TreasuryContract {
             },
         ]);
 
-        // Publish event for claiming interest
-        e.events().publish(("Treasury", Symbol::new(&e, "claim_interest")), (pool.clone(), reserve_address.clone(), to.clone(), interest.clone()));
-
+        e.events().publish(("Treasury", Symbol::new(&e, "claim")), (reserve_address.clone(), to.clone(), interest.clone()));
         interest
     }
 

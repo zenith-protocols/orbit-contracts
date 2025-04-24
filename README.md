@@ -27,13 +27,14 @@ This repository contains the core smart contracts powering the **Orbit Protocol*
 - **Key Roles**:
   - Mints/burns stablecoins supplied to Blend lending pools.
   - Issues flash loans to PegKeeper for peg maintenance.
-- **Security**: Only authorized contracts (like Dao-utils) can request flash loans.
+- **Security**: Only authorized contracts (like DAO contract) can managa stablecoins and supply
 
 ### 2. `bridge-oracle`
 - **Purpose**: Supplies fiat-based price feeds to the protocol.
 - **Key Roles**:
   - Fetches fiat prices via third-party oracle.
   - Provides accurate pricing for stablecoin collateral valuation.
+  - Maps stablecoin assets to their fiat pricing
 
 ### 3. `pegkeeper`
 - **Purpose**: Maintains stablecoin peg across markets.
@@ -79,10 +80,3 @@ Deploy using Stellar CLI tools or Soroban CLI.
 ## ⚖️ License
 
 This project is open-sourced under the MIT License. See [`LICENSE`](./LICENSE) for details.
-
----
-
-## 📬 Contact
-
-For questions, audits, or integration support, please reach out via [orbitcdp.finance](https://orbitcdp.finance) or create a GitHub issue.
-

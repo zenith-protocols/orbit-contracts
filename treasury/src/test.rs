@@ -8,7 +8,7 @@ use crate::{TreasuryContract, TreasuryClient};
 fn test_update_pegkeeper() {
     let env: Env = Default::default();
     env.mock_all_auths();
-    env.budget().reset_unlimited();
+    env.cost_estimate().budget().reset_unlimited();
 
     let admin = Address::generate(&env);
     let factory = Address::generate(&env);

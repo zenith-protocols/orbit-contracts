@@ -59,9 +59,11 @@ fn test_liquidations_mock() {
     let pegkeeper = &fixture.mock_pegkeeper;
 
     let liq_pct = 100;
+    let ousd = fixture.tokens[TokenIndex::OUSD].address.clone();
+    let xlm = fixture.tokens[TokenIndex::XLM].address.clone();
     let auction_data = pool_fixture
         .pool
-        .new_liquidation_auction(&henk, &liq_pct);
+        .new_auction(&0, &henk, &vec![&fixture.env, ousd.clone()], &vec![&fixture.env, xlm.clone()], &liq_pct);
 
     let ousd_bid_amount = auction_data.bid.get_unchecked(fixture.tokens[TokenIndex::OUSD].address.clone());
     let xlm_lot_amount = auction_data.lot.get_unchecked(fixture.tokens[TokenIndex::XLM].address.clone());
@@ -143,9 +145,11 @@ fn test_pegkeeper() {
         1_2000000,    // GBP
     ]);
     let liq_pct = 100;
+    let ousd = fixture.tokens[TokenIndex::OUSD].address.clone();
+    let xlm = fixture.tokens[TokenIndex::XLM].address.clone();
     let auction_data = pool_fixture
         .pool
-        .new_liquidation_auction(&henk, &liq_pct);
+        .new_auction(&0, &henk, &vec![&fixture.env, ousd.clone()], &vec![&fixture.env, xlm.clone()], &liq_pct);
 
     let token = fixture.tokens[TokenIndex::OUSD].address.clone();
     let amount = auction_data.bid.get_unchecked(fixture.tokens[TokenIndex::OUSD].address.clone());
@@ -236,10 +240,11 @@ fn test_pegkeeper_no_profit() {
         1_2000000,    // GBP
     ]);
     let liq_pct = 100;
+    let ousd = fixture.tokens[TokenIndex::OUSD].address.clone();
+    let xlm = fixture.tokens[TokenIndex::XLM].address.clone();
     let auction_data = pool_fixture
         .pool
-        .new_liquidation_auction(&henk, &liq_pct);
-
+        .new_auction(&0, &henk, &vec![&fixture.env, ousd.clone()], &vec![&fixture.env, xlm.clone()], &liq_pct);
     let token = fixture.tokens[TokenIndex::OUSD].address.clone();
     let amount = auction_data.bid.get_unchecked(fixture.tokens[TokenIndex::OUSD].address.clone());
     let blend_pool = pool_fixture.pool.address.clone();
