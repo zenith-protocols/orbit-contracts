@@ -19,7 +19,6 @@ pub(crate) fn create_mock_oracle(e: &Env) -> (Address, MockPriceOracleClient) {
 fn test_add_assets() {
     let env: Env = Default::default();
     env.mock_all_auths();
-    env.budget().reset_unlimited();
 
     let admin = Address::generate(&env);
     // We don't need actual token contracts for this test
@@ -35,15 +34,17 @@ fn test_add_assets() {
                 TestAsset::Other(Symbol::new(&env, "USD")),
                 TestAsset::Other(Symbol::new(&env, "EURO")),
             ],
-        &7,
+        &14,
         &300,
     );
     mock_oracle_client.set_price_stable(&svec![
             &env,
-            1_0000000,
-            1_1000000,
+            1_00_000_000_000_000,
+            1_10_000_000_000_000,
         ]);
-
+    let euro_price = mock_oracle_client.lastprice(&TestAsset::Other(Symbol::new(&env, "EURO"))).unwrap().price;
+    assert_eq!(euro_price, 1_10_000_000_000_000);
+    
     let xlm_address = Address::generate(&env);
     let (stellar_oracle_address, mock_stellar_oracle_client) = create_mock_oracle(&env);
     mock_stellar_oracle_client.set_data(
@@ -53,21 +54,23 @@ fn test_add_assets() {
                 &env,
                 TestAsset::Stellar(xlm_address.clone()),
             ],
-        &7,
+        &14,
         &300,
     );
     mock_stellar_oracle_client.set_price_stable(&svec![
             &env,
-            0_1000000,
+            0_10_000_000_000_000,
         ]);
-    let bridge_oracle_address = env.register(BridgeOracleContract, (admin.clone(), oracle_address, stellar_oracle_address));
+
+    let bridge_oracle_address = env.register(BridgeOracleContract, (admin.clone(), stellar_oracle_address, oracle_address));
     let bridge_oracle_client = BridgeOracleClient::new(&env, &bridge_oracle_address);
+    
 
     let stellar_asset = Asset::Stellar(token1.clone());
     let stellar_asset2 = Asset::Stellar(token2.clone());
     let usd_asset = Asset::Other(Symbol::new(&env, "USD"));
     let euro_asset = Asset::Other(Symbol::new(&env, "EURO"));
-    let xlm_asset = Asset::Stellar(xlm_address.clone());
+    let _xlm_asset = Asset::Stellar(xlm_address.clone());
 
     bridge_oracle_client.add_asset(
         &stellar_asset,
@@ -91,15 +94,31 @@ fn test_add_assets() {
         &stellar_asset2,
         &euro_asset,
     );
+    assert_eq!(
+        env.auths(),
+        std::vec![(
+            admin.clone(),
+            AuthorizedInvocation {
+                function: AuthorizedFunction::Contract((
+                    bridge_oracle_address.clone(),
+                    symbol_short!("add_asset"),
+                    (stellar_asset2.clone(), euro_asset.clone()).into_val(&env),
+                )),
+                sub_invocations: std::vec![]
+            }
+        )]
+    );
 
     let token1_price = bridge_oracle_client.lastprice(&Asset::Stellar(token1.clone())).unwrap().price;
     let token2_price = bridge_oracle_client.lastprice(&Asset::Stellar(token2.clone())).unwrap().price;
     let usd_price = bridge_oracle_client.lastprice(&Asset::Other(Symbol::new(&env, "USD"))).unwrap().price;
     let euro_price = bridge_oracle_client.lastprice(&Asset::Other(Symbol::new(&env, "EURO"))).unwrap().price;
     let xlm_price = bridge_oracle_client.lastprice(&Asset::Stellar(xlm_address.clone())).unwrap().price;
-    assert_eq!(usd_price, 1_0000000);
-    assert_eq!(euro_price, 1_1000000);
-    assert_eq!(xlm_price, 0_1000000);
+    assert_eq!(token1_price, 1_00_000_000_000_000);
+    assert_eq!(token2_price, 1_10_000_000_000_000);
+    assert_eq!(usd_price, 1_00_000_000_000_000);
+    assert_eq!(euro_price, 1_10_000_000_000_000);
+    assert_eq!(xlm_price, 0_10_000_000_000_000);
     assert_eq!(token1_price, usd_price);
     assert_eq!(token2_price, euro_price);
 }
@@ -108,7 +127,6 @@ fn test_add_assets() {
 fn test_update_oracle() {
     let env: Env = Default::default();
     env.mock_all_auths();
-    env.budget().reset_unlimited();
 
     let admin = Address::generate(&env);
     let stellar_oracle = Address::generate(&env);
@@ -129,23 +147,8 @@ fn test_update_oracle() {
             AuthorizedInvocation {
                 function: AuthorizedFunction::Contract((
                     bridge_oracle_address.clone(),
-                    Symbol::new(&env, "set_stellar_oracle"),
-                    (new_stellar_oracle.clone(),).into_val(&env),
-                )),
-                sub_invocations: std::vec![]
-            }
-        )]
-    );
-
-    assert_eq!(
-        env.auths(),
-        std::vec![(
-            admin.clone(),
-            AuthorizedInvocation {
-                function: AuthorizedFunction::Contract((
-                    bridge_oracle_address.clone(),
-                    Symbol::new(&env, "set_stellar_oracle"),
-                    (new_other_oracle.clone(),).into_val(&env),
+                    Symbol::new(&env, "set_oracles"),
+                    (new_stellar_oracle.clone(), new_other_oracle.clone()).into_val(&env),
                 )),
                 sub_invocations: std::vec![]
             }

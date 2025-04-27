@@ -1,4 +1,4 @@
-use soroban_sdk::{testutils::Address as _, Address, Env};
+use soroban_sdk::{Address, Env};
 
 mod pair_factory_contract {
     soroban_sdk::contractimport!(file = "../wasm/soroswap/pair_factory.wasm");

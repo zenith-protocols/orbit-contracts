@@ -83,7 +83,7 @@ impl TestFixture<'_> {
     /// Deploys BLND (0), USDC (1), wETH (2), XLM (3), and STABLE (4) test tokens, alongside all required
     /// Blend Protocol dependencies, including a BLND-USDC LP.
     
-    pub fn create<'a>(mock: bool, wasm: bool) -> TestFixture<'a> {
+    pub fn create<'a>(_mock: bool, wasm: bool) -> TestFixture<'a> {
         let e = Env::default();
         e.mock_all_auths();
         e.cost_estimate().budget().reset_unlimited();

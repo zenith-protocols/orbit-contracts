@@ -1,4 +1,4 @@
-use soroban_sdk::{testutils::Address as _, Address, Env};
+use soroban_sdk::{Address, Env};
 
 mod dao_utils_wasm {
     use dao_utils::dependencies::bridge_oracle::Asset;
