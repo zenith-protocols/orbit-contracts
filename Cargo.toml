@@ -6,9 +6,7 @@ members = [
     "pegkeeper",
     "test-suites",
     "bridge-oracle",
-    "dao-utils",
-    "mocks/mock-pegkeeper",
-    "mocks/mock-treasury"]
+    "dao-utils"]
 
 [profile.release-with-logs]
 inherits = "release"

@@ -3,7 +3,7 @@ use test_suites::test_fixture::TokenIndex;
 
 #[test]
 fn test_increase_supply() {
-    let fixture = create_fixture_with_data(false, false);
+    let fixture = create_fixture_with_data(false);
 
     let pool_fixture = &fixture.pools[0];
 
@@ -20,7 +20,7 @@ fn test_increase_supply() {
 
 #[test]
 fn test_decrease_supply() {
-    let fixture = create_fixture_with_data(false, false);
+    let fixture = create_fixture_with_data(false);
 
     let pool_fixture = &fixture.pools[0];
 
@@ -38,7 +38,7 @@ fn test_decrease_supply() {
 #[test]
 #[should_panic = "Error(Contract, #1504)"]
 fn test_not_enough_supply() {
-    let fixture = create_fixture_with_data(false, false);
+    let fixture = create_fixture_with_data(false);
 
     let pool_fixture = &fixture.pools[0];
 
@@ -51,7 +51,7 @@ fn test_not_enough_supply() {
 #[test]
 #[should_panic = "Error(Contract, #1502)"]
 fn test_zero_amount() {
-    let fixture = create_fixture_with_data(false, false);
+    let fixture = create_fixture_with_data(false);
 
     let amount = 0;
     fixture.dao_utils.update_supply(&fixture.admin, &fixture.treasury.address.clone(), &fixture.tokens[TokenIndex::OUSD].address.clone(), &amount);
