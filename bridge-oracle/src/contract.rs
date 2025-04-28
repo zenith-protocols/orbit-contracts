@@ -28,6 +28,11 @@ pub trait BridgeOracle {
     /// * `asset` - The asset to fetch the price for
     fn lastprice(env: Env, asset: Asset) -> Option<PriceData>;
 
+    /// (Admin only) Set the admin address
+    /// # Arguments
+    /// * `new_admin` - The new admin address
+    fn set_admin(e: Env, new_admin: Address);
+
     /// Updates this contract to a new version
     /// # Arguments
     /// * `new_wasm_hash` - The new wasm hash
@@ -103,6 +108,15 @@ impl BridgeOracle for BridgeOracleContract {
                 }   
             }
         }
+    }
+
+    fn set_admin(e: Env, new_admin: Address) {
+        storage::extend_instance(&e);
+        let admin = storage::get_admin(&e);
+        admin.require_auth();
+        storage::set_admin(&e, &new_admin);
+
+        e.events().publish(("BridgeOracle", Symbol::new(&e, "set_admin")), (new_admin.clone(),));
     }
 
     fn upgrade(e: Env, new_wasm_hash: BytesN<32>) {

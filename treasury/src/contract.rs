@@ -72,6 +72,13 @@ pub trait Treasury {
     /// If the caller is not the dao-utils
     fn set_pegkeeper(e: Env, pegkeeper: Address);
 
+
+    /// (Admin only) Set a new address as the admin
+    ///
+    /// ### Arguments
+    /// * `admin` - The new admin address
+    fn set_admin(e: Env, admin: Address);
+
     /// Updates this contract to a new version
     /// # Arguments
     /// * `new_wasm_hash` - The new wasm hash
@@ -290,6 +297,16 @@ impl Treasury for TreasuryContract {
         storage::set_pegkeeper(&e, &new_pegkeeper);
 
         e.events().publish(("Treasury", Symbol::new(&e, "set_pegkeeper")), new_pegkeeper.clone());
+    }
+
+    fn set_admin(e: Env, new_admin: Address) {
+        storage::extend_instance(&e);
+        let admin = storage::get_admin(&e);
+        admin.require_auth();
+
+        storage::set_admin(&e, &new_admin);
+
+        e.events().publish(("Treasury", Symbol::new(&e, "set_admin")), new_admin.clone(),);
     }
 
     fn upgrade(e: Env, new_wasm_hash: BytesN<32>) {

@@ -16,5 +16,5 @@ testutils = [
 soroban-sdk = { workspace = true }
 soroban-fixed-point-math = { workspace = true }
 
-[dev_dependencies]
+[dev-dependencies]
 soroban-sdk = { workspace = true, features = ["testutils"] }

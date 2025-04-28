@@ -10,10 +10,6 @@ publish = false
 crate-type = ["rlib"]
 doctest = false
 
-[profile.release-with-logs]
-inherits = "release"
-debug-assertions = true
-
 [dependencies]
 soroban-sdk = { workspace = true, features = ["testutils"] }
 soroban-fixed-point-math = { workspace = true }
@@ -21,5 +17,5 @@ sep-40-oracle = { workspace = true, features = ["testutils"] }
 sep-41-token = { workspace = true, features = ["testutils"] }
 treasury = { path = "../treasury", features = ["testutils"] }
 bridge-oracle = { path = "../bridge-oracle", features = ["testutils"] }
-pegkeeper = { path = "../pegkeeper", features = ["testutils"] }
-dao-utils = { path = "../dao-utils", features = ["testutils"] }
+pegkeeper = { path = "../pegkeeper" }
+dao-utils = { path = "../dao-utils"}
