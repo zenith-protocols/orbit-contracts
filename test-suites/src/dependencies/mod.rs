@@ -10,7 +10,5 @@ pub mod treasury;
 pub mod pair_factory;
 pub mod pair;
 pub mod router;
-pub mod mock_treasury;
-pub mod mock_pegkeeper;
 pub mod pegkeeper;
 pub mod dao_utils;

@@ -1,4 +1,4 @@
-use soroban_sdk::{testutils::Address as _, vec, Address, Env};
+use soroban_sdk::{vec, Address, Env};
 use sep_41_token::testutils::MockTokenClient;
 
 mod lp_contract {

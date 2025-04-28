@@ -6,100 +6,100 @@ use test_suites::{
     test_fixture::{TokenIndex, SCALAR_7},
 };
 
-#[test]
-fn test_liquidations_mock() {
-    let mut fixture = create_fixture_with_data(true, false);
+// #[test]
+// fn test_liquidations() {
+//     let mut fixture = create_fixture_with_data(false);
 
-    let initial_xlm_amount = 10_000_000_000_00 * SCALAR_7; // Assuming 1 XLM
-    let initial_ousd_amount = (initial_xlm_amount as f64 * 0.088) as i128;
-    fixture.create_pair(TokenIndex::OUSD, TokenIndex::XLM, initial_ousd_amount, initial_xlm_amount);
+//     let initial_xlm_amount = 10_000_000_000_00 * SCALAR_7; // Assuming 1 XLM
+//     let initial_ousd_amount = (initial_xlm_amount as f64 * 0.088) as i128;
+//     fixture.create_pair(TokenIndex::OUSD, TokenIndex::XLM, initial_ousd_amount, initial_xlm_amount);
 
-    let pool_fixture = &fixture.pools[0];
-    let henk = Address::generate(&fixture.env);
-    let treasury = &fixture.mock_treasury;
+//     let pool_fixture = &fixture.pools[0];
+//     let henk = Address::generate(&fixture.env);
+//     let treasury = &fixture.mock_treasury;
 
-    fixture.tokens[TokenIndex::XLM].mint(&henk, &(120_000 * SCALAR_7));
+//     fixture.tokens[TokenIndex::XLM].mint(&henk, &(120_000 * SCALAR_7));
 
-    let requests: Vec<Request> = vec![
-        &fixture.env,
-        Request {
-            request_type: RequestType::SupplyCollateral as u32,
-            address: fixture.tokens[TokenIndex::XLM].address.clone(),
-            amount: 100_000 * SCALAR_7,
-        },
-        Request {
-            request_type: RequestType::Borrow as u32,
-            address: fixture.tokens[TokenIndex::OUSD].address.clone(),
-            amount: 7_000 * SCALAR_7,
-        },
-    ];
-    pool_fixture.pool.submit(&henk, &henk, &henk, &requests);
+//     let requests: Vec<Request> = vec![
+//         &fixture.env,
+//         Request {
+//             request_type: RequestType::SupplyCollateral as u32,
+//             address: fixture.tokens[TokenIndex::XLM].address.clone(),
+//             amount: 100_000 * SCALAR_7,
+//         },
+//         Request {
+//             request_type: RequestType::Borrow as u32,
+//             address: fixture.tokens[TokenIndex::OUSD].address.clone(),
+//             amount: 7_000 * SCALAR_7,
+//         },
+//     ];
+//     pool_fixture.pool.submit(&henk, &henk, &henk, &requests);
 
-    assert_eq!(
-        20_000 * SCALAR_7,
-        fixture.tokens[TokenIndex::XLM].balance(&henk)
-    );
-    assert_eq!(
-        7_000 * SCALAR_7,
-        fixture.tokens[TokenIndex::OUSD].balance(&henk)
-    );
+//     assert_eq!(
+//         20_000 * SCALAR_7,
+//         fixture.tokens[TokenIndex::XLM].balance(&henk)
+//     );
+//     assert_eq!(
+//         7_000 * SCALAR_7,
+//         fixture.tokens[TokenIndex::OUSD].balance(&henk)
+//     );
 
-    fixture.jump(60 * 60 * 24 * 7 * 4); // 4 weeks
-    fixture.oracle.set_price_stable(&vec![
-        &fixture.env,
-        1_0000000,    // usdc
-        0_0740000,    // xlm
-        1_0000000,    // USD
-        1_1000000,    // EURO
-        1_2000000,    // GBP
-    ]);
+//     fixture.jump(60 * 60 * 24 * 7 * 4); // 4 weeks
+//     fixture.oracle.set_price_stable(&vec![
+//         &fixture.env,
+//         1_0000000,    // usdc
+//         0_0740000,    // xlm
+//         1_0000000,    // USD
+//         1_1000000,    // EURO
+//         1_2000000,    // GBP
+//     ]);
 
-    // Create the token pair with initial supply.
+//     // Create the token pair with initial supply.
 
-    let pegkeeper = &fixture.mock_pegkeeper;
+//     let pegkeeper = &fixture.mock_pegkeeper;
 
-    let liq_pct = 100;
-    let ousd = fixture.tokens[TokenIndex::OUSD].address.clone();
-    let xlm = fixture.tokens[TokenIndex::XLM].address.clone();
-    let auction_data = pool_fixture
-        .pool
-        .new_auction(&0, &henk, &vec![&fixture.env, ousd.clone()], &vec![&fixture.env, xlm.clone()], &liq_pct);
+//     let liq_pct = 100;
+//     let ousd = fixture.tokens[TokenIndex::OUSD].address.clone();
+//     let xlm = fixture.tokens[TokenIndex::XLM].address.clone();
+//     let auction_data = pool_fixture
+//         .pool
+//         .new_auction(&0, &henk, &vec![&fixture.env, ousd.clone()], &vec![&fixture.env, xlm.clone()], &liq_pct);
 
-    let ousd_bid_amount = auction_data.bid.get_unchecked(fixture.tokens[TokenIndex::OUSD].address.clone());
-    let xlm_lot_amount = auction_data.lot.get_unchecked(fixture.tokens[TokenIndex::XLM].address.clone());
+//     let ousd_bid_amount = auction_data.bid.get_unchecked(fixture.tokens[TokenIndex::OUSD].address.clone());
+//     let xlm_lot_amount = auction_data.lot.get_unchecked(fixture.tokens[TokenIndex::XLM].address.clone());
 
-    //allow 250 blocks to pass
-    fixture.jump_with_sequence(251 * 5);
+//     //allow 250 blocks to pass
+//     fixture.jump_with_sequence(251 * 5);
 
-    let pair = &fixture.pairs[0];
+//     let pair = &fixture.pairs[0];
 
-    let token = fixture.tokens[TokenIndex::OUSD].address.clone();
-    let args: Vec<Val> = vec![
-        &fixture.env,
-        token.into_val(&fixture.env),
-        ousd_bid_amount.into_val(&fixture.env),
-    ];
-    let fl_receive_sym = Symbol::new(&fixture.env, "fl_receive");
+//     let token = fixture.tokens[TokenIndex::OUSD].address.clone();
+//     let args: Vec<Val> = vec![
+//         &fixture.env,
+//         token.into_val(&fixture.env),
+//         ousd_bid_amount.into_val(&fixture.env),
+//     ];
+//     let fl_receive_sym = Symbol::new(&fixture.env, "fl_receive");
 
-    treasury.keep_peg(&fl_receive_sym, &args.clone());
+//     treasury.keep_peg(&fl_receive_sym, &args.clone());
 
-    std::println!("OUSD Balance: {}", fixture.tokens[TokenIndex::OUSD].balance(&pegkeeper.address.clone()) / SCALAR_7);
-    std::println!("XLM Balance: {}", fixture.tokens[TokenIndex::XLM].balance(&pegkeeper.address.clone()));
+//     std::println!("OUSD Balance: {}", fixture.tokens[TokenIndex::OUSD].balance(&pegkeeper.address.clone()) / SCALAR_7);
+//     std::println!("XLM Balance: {}", fixture.tokens[TokenIndex::XLM].balance(&pegkeeper.address.clone()));
 
-    pegkeeper.liquidate(&henk, &fixture.tokens[TokenIndex::OUSD].address.clone(), &ousd_bid_amount, &fixture.tokens[TokenIndex::XLM].address.clone(), &xlm_lot_amount, &pool_fixture.pool.address.clone(), &(100 as i128));
+//     pegkeeper.liquidate(&henk, &fixture.tokens[TokenIndex::OUSD].address.clone(), &ousd_bid_amount, &fixture.tokens[TokenIndex::XLM].address.clone(), &xlm_lot_amount, &pool_fixture.pool.address.clone(), &(100 as i128));
 
-    std::println!("OUSD Balance: {}", fixture.tokens[TokenIndex::OUSD].balance(&pegkeeper.address.clone()) / SCALAR_7);
-    std::println!("XLM Balance: {}", fixture.tokens[TokenIndex::XLM].balance(&pegkeeper.address.clone()));
+//     std::println!("OUSD Balance: {}", fixture.tokens[TokenIndex::OUSD].balance(&pegkeeper.address.clone()) / SCALAR_7);
+//     std::println!("XLM Balance: {}", fixture.tokens[TokenIndex::XLM].balance(&pegkeeper.address.clone()));
 
-    pegkeeper.swap(&pair.address.clone(), &fixture.tokens[TokenIndex::OUSD].address.clone(), &fixture.tokens[TokenIndex::XLM].address.clone(), &xlm_lot_amount, &0);
+//     pegkeeper.swap(&pair.address.clone(), &fixture.tokens[TokenIndex::OUSD].address.clone(), &fixture.tokens[TokenIndex::XLM].address.clone(), &xlm_lot_amount, &0);
 
-    std::println!("OUSD Balance: {}", fixture.tokens[TokenIndex::OUSD].balance(&pegkeeper.address.clone()) / SCALAR_7);
-    std::println!("XLM Balance: {}", fixture.tokens[TokenIndex::XLM].balance(&pegkeeper.address.clone()));
-}
+//     std::println!("OUSD Balance: {}", fixture.tokens[TokenIndex::OUSD].balance(&pegkeeper.address.clone()) / SCALAR_7);
+//     std::println!("XLM Balance: {}", fixture.tokens[TokenIndex::XLM].balance(&pegkeeper.address.clone()));
+// }
 
 #[test]
 fn test_pegkeeper() {
-    let mut fixture = create_fixture_with_data(false, false);
+    let mut fixture = create_fixture_with_data(false);
 
     let initial_xlm_amount = 10_000_000_000_00 * SCALAR_7;
     let initial_ousd_amount = (initial_xlm_amount as f64 * 0.088) as i128;
@@ -194,7 +194,7 @@ fn test_pegkeeper() {
 #[test]
 #[should_panic(expected = "Error(Contract, #1505)")]
 fn test_pegkeeper_no_profit() {
-    let mut fixture = create_fixture_with_data(false, false);
+    let mut fixture = create_fixture_with_data(false);
 
     let initial_xlm_amount = 10_000_000_000_00 * SCALAR_7;
     let initial_ousd_amount = (initial_xlm_amount as f64 * 0.05) as i128; // Lower price a lot so that the liquidation is not profitable

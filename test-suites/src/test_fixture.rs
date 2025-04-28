@@ -25,9 +25,7 @@ use crate::dependencies::router::{RouterClient, create_router};
 use crate::dependencies::dao_utils::{DaoUtilsClient, create_dao_utils};
 use crate::dependencies::bridge_oracle::{BridgeOracleClient, create_bridge_oracle};
 use crate::dependencies::treasury::{TreasuryClient, create_treasury};
-use crate::dependencies::mock_treasury::{MockTreasuryClient, create_mock_treasury};
 use crate::dependencies::pegkeeper::{PegkeeperClient, create_pegkeeper};
-use crate::dependencies::mock_pegkeeper::{MockPegkeeperClient, create_mock_pegkeeper};
 
 pub const SCALAR_7: i128 = 1_000_0000;
 pub const SCALAR_9: i128 = 1_000_000_000;
@@ -72,9 +70,7 @@ pub struct TestFixture<'a> {
     pub dao_utils: DaoUtilsClient<'a>,
     pub bridge_oracle: BridgeOracleClient<'a>,
     pub treasury: TreasuryClient<'a>,
-    pub mock_treasury: MockTreasuryClient<'a>,
     pub pegkeeper: PegkeeperClient<'a>,
-    pub mock_pegkeeper: MockPegkeeperClient<'a>,
 }
 
 impl TestFixture<'_> {
@@ -83,7 +79,7 @@ impl TestFixture<'_> {
     /// Deploys BLND (0), USDC (1), wETH (2), XLM (3), and STABLE (4) test tokens, alongside all required
     /// Blend Protocol dependencies, including a BLND-USDC LP.
     
-    pub fn create<'a>(mock: bool, wasm: bool) -> TestFixture<'a> {
+    pub fn create<'a>(wasm: bool) -> TestFixture<'a> {
         let e = Env::default();
         e.mock_all_auths();
         e.cost_estimate().budget().reset_unlimited();
@@ -167,16 +163,16 @@ impl TestFixture<'_> {
                 Asset::Other(Symbol::new(&e, "EURO")),
                 Asset::Other(Symbol::new(&e, "GBP")),
             ],
-            &7,
+            &14,
             &300,
         );
         mock_oracle_client.set_price_stable(&svec![
             &e,
-            1_0000000,    // usdc
-            0_1000000,    // xlm
-            1_0000000,    // usd
-            1_1000000,    // euro
-            1_2000000,    // gbp
+            1_00_000_000_000_000,    // usdc
+            0_10_000_000_000_000,    // xlm
+            1_00_000_000_000_000,    // usd
+            1_10_000_000_000_000,    // euro
+            1_20_000_000_000_000,    // gbp
         ]);
 
         // Initialize soroswap
@@ -190,12 +186,7 @@ impl TestFixture<'_> {
         let dao_utils_client = create_dao_utils(&e, &dao_utils_id, wasm);
         let bridge_oracle_client = create_bridge_oracle(&e, &bridge_oracle_id, wasm, &admin, &mock_oracle_id, &mock_oracle_id);
         let treasury_client = create_treasury(&e, &treasury_id, wasm, &admin, &pool_factory_id, &pegkeeper_id);
-        let (mock_treasury_id, mock_treasury_client) = create_mock_treasury(&e, wasm);
         let pegkeeper_client = create_pegkeeper(&e, &pegkeeper_id, wasm, &treasury_id, &router_id);
-        let (mock_pegkeeper_id, mock_pegkeeper_client) = create_mock_pegkeeper(&e, wasm);
-
-        mock_treasury_client.initialize(&admin, &mock_pegkeeper_id);
-        mock_pegkeeper_client.initialize(&mock_treasury_id, &router_id);
 
         let fixture = TestFixture {
             env: e,
@@ -219,9 +210,7 @@ impl TestFixture<'_> {
             ],
             dao_utils: dao_utils_client,
             treasury: treasury_client,
-            mock_treasury: mock_treasury_client,
             pegkeeper: pegkeeper_client,
-            mock_pegkeeper: mock_pegkeeper_client,
         };
         fixture.jump(7 * 24 * 60 * 60);
         fixture

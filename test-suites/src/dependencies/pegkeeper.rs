@@ -1,4 +1,4 @@
-use soroban_sdk::{testutils::Address as _, Address, Env};
+use soroban_sdk::{Address, Env};
 
 mod pegkeeper_contract {
     soroban_sdk::contractimport!(file = "../wasm/orbit/pegkeeper.wasm");
