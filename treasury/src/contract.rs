@@ -76,8 +76,8 @@ pub trait Treasury {
     /// (Admin only) Set a new address as the admin
     ///
     /// ### Arguments
-    /// * `admin` - The new admin address
-    fn set_admin(e: Env, admin: Address);
+    /// * `new_admin` - The new admin address
+    fn set_admin(e: Env, new_admin: Address);
 
     /// Updates this contract to a new version
     /// # Arguments
