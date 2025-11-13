@@ -13,7 +13,6 @@ pub enum TreasuryDataKey {
     ADMIN,
     BLENDPOOL(Address),
     FACTORY,
-    PEGKEEPER,
     TOTALSUPPLY(Address),
 }
 
@@ -34,19 +33,6 @@ pub fn set_admin(e: &Env, new_admin: &Address) {
     e.storage()
         .instance()
         .set(&TreasuryDataKey::ADMIN, new_admin);
-}
-
-pub fn get_pegkeeper(e: &Env) -> Address {
-    e.storage()
-        .instance()
-        .get(&TreasuryDataKey::PEGKEEPER)
-        .unwrap_optimized()
-}
-
-pub fn set_pegkeeper(e: &Env, new_pegkeeper: &Address) {
-    e.storage()
-        .instance()
-        .set(&TreasuryDataKey::PEGKEEPER, new_pegkeeper);
 }
 
 pub fn get_factory(e: &Env) -> Address {
