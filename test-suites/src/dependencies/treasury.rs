@@ -9,11 +9,11 @@ mod treasury_contract {
 pub use treasury_contract::WASM as POOL_WASM;
 pub use treasury::{TreasuryClient, TreasuryContract};
 
-pub fn create_treasury<'a>(e: &Env, contract_id: &Address, wasm: bool, admin: &Address, factory: &Address, pegkeeper: &Address) -> TreasuryClient<'a> {
+pub fn create_treasury<'a>(e: &Env, contract_id: &Address, wasm: bool, admin: &Address, factory: &Address) -> TreasuryClient<'a> {
     if wasm {
-        e.register_at(&contract_id, treasury_contract::WASM, (admin, factory, pegkeeper));
+        e.register_at(&contract_id, treasury_contract::WASM, (admin, factory));
     } else {
-        e.register_at(&contract_id, TreasuryContract {}, (admin, factory, pegkeeper));
+        e.register_at(&contract_id, TreasuryContract {}, (admin, factory));
     }
     TreasuryClient::new(e, &contract_id)
 }

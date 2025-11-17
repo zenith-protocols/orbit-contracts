@@ -15,20 +15,6 @@ pub struct TreasuryContract;
 #[contractclient(name="TreasuryClient")]
 pub trait Treasury {
 
-    /// Up;grade function that can be called once
-    /// This reinitializes contract storage
-    ///
-    /// ### Arguments
-    /// * `admin` - The Address for the admin
-    /// * `factory` - The Address for the blend factory
-    /// * `ousd` - The address of the oUSD asset
-    /// * `pool` - The Address for the blend pool
-    /// * `supply` - The supply of oUSD in the pool
-    ///
-    /// ### Panics
-    /// If the admin is already set
-    fn handle_upgrade(e: Env, admin: Address, factory: Address, ousd: Address, pool: Address, supply: i128);
-
     /// (Admin only) add a stablecoin
     ///
     /// ### Arguments
@@ -74,26 +60,37 @@ pub trait Treasury {
     /// ### Arguments
     /// * `new_admin` - The new admin address
     fn set_admin(e: Env, new_admin: Address);
+
+    /// Updates this contract to a new version
+    /// # Arguments
+    /// * `new_wasm_hash` - The new wasm hash
+    fn upgrade(e: Env, new_wasm_hash: BytesN<32>);
+}
+
+#[contractimpl]
+impl TreasuryContract {
+
+    /// Initialize the treasury
+    ///
+    /// ### Arguments
+    /// * `admin` - The Address of the admin
+    /// * `factory` - The Address for the blend factory
+    ///
+    /// ### Panics
+    /// If the contract is already initialized
+    pub fn __constructor(e: Env, admin: Address, factory: Address) {
+        admin.require_auth();
+
+        storage::set_factory(&e, &factory);
+        storage::set_admin(&e, &admin);
+
+        e.events().publish(("Treasury", Symbol::new(&e, "initialize")), (admin.clone(),));
+    }
 }
 
 #[contractimpl]
 impl Treasury for TreasuryContract {
-
-    fn handle_upgrade(e: Env, admin: Address, factory: Address, ousd: Address, pool: Address, supply: i128) {
-        admin.require_auth();
-
-        if e.storage()
-            .instance()
-            .has(&TreasuryDataKey::ADMIN) {
-            panic_with_error!(e, TreasuryError::AlreadyInitializedError);
-        }
-
-        storage::set_admin(&e, &admin);
-        storage::set_factory(&e, &factory);
-        storage::set_blend_pool(&e, &ousd, &pool);
-        storage::set_total_supply(&e, &ousd, &supply);
-    }
-
+    
     fn add_stablecoin(e: Env, token: Address, blend_pool: Address) {
         storage::extend_instance(&e);
         let admin = storage::get_admin(&e);
@@ -240,5 +237,14 @@ impl Treasury for TreasuryContract {
         storage::set_admin(&e, &new_admin);
 
         e.events().publish(("Treasury", Symbol::new(&e, "set_admin")), new_admin.clone(),);
+    }
+
+
+    fn upgrade(e: Env, new_wasm_hash: BytesN<32>) {
+        storage::extend_instance(&e);
+        let admin = storage::get_admin(&e);
+        admin.require_auth();
+
+        e.deployer().update_current_contract_wasm(new_wasm_hash);
     }
 }

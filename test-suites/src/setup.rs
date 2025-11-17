@@ -44,7 +44,7 @@ pub fn create_fixture_with_data<'a>(wasm: bool) -> TestFixture<'a> {
         r_three: 0,
         reactivity: 0,
         index: 0,
-        collateral_cap: 1000000000000000000,
+        supply_cap: 1000000000000000000,
         enabled: true,
     };
 
@@ -60,7 +60,7 @@ pub fn create_fixture_with_data<'a>(wasm: bool) -> TestFixture<'a> {
         r_three: 50_0000,
         reactivity: 40, // 2e-5
         index: 1,
-        collateral_cap: 1000000000000000000,
+        supply_cap: 1000000000000000000,
         enabled: true,
     };
 

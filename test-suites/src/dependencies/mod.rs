@@ -10,5 +10,4 @@ pub mod treasury;
 pub mod pair_factory;
 pub mod pair;
 pub mod router;
-pub mod pegkeeper;
 pub mod dao_utils;
