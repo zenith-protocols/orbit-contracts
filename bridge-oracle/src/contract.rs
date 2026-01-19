@@ -32,11 +32,6 @@ pub trait BridgeOracle {
     /// # Arguments
     /// * `new_admin` - The new admin address
     fn set_admin(e: Env, new_admin: Address);
-
-    /// Updates this contract to a new version
-    /// # Arguments
-    /// * `new_wasm_hash` - The new wasm hash
-    fn upgrade(e: Env, new_wasm_hash: BytesN<32>);
 }
 
 #[contractimpl]
@@ -117,13 +112,5 @@ impl BridgeOracle for BridgeOracleContract {
         storage::set_admin(&e, &new_admin);
 
         e.events().publish(("BridgeOracle", Symbol::new(&e, "set_admin")), (new_admin.clone(),));
-    }
-
-    fn upgrade(e: Env, new_wasm_hash: BytesN<32>) {
-        storage::extend_instance(&e);
-        let admin = storage::get_admin(&e);
-        admin.require_auth();
-
-        e.deployer().update_current_contract_wasm(new_wasm_hash);
     }
 }
