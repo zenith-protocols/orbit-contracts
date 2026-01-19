@@ -25,7 +25,6 @@ use crate::dependencies::router::{RouterClient, create_router};
 use crate::dependencies::dao_utils::{DaoUtilsClient, create_dao_utils};
 use crate::dependencies::bridge_oracle::{BridgeOracleClient, create_bridge_oracle};
 use crate::dependencies::treasury::{TreasuryClient, create_treasury};
-use crate::dependencies::pegkeeper::{PegkeeperClient, create_pegkeeper};
 
 pub const SCALAR_7: i128 = 1_000_0000;
 pub const SCALAR_9: i128 = 1_000_000_000;
@@ -70,7 +69,6 @@ pub struct TestFixture<'a> {
     pub dao_utils: DaoUtilsClient<'a>,
     pub bridge_oracle: BridgeOracleClient<'a>,
     pub treasury: TreasuryClient<'a>,
-    pub pegkeeper: PegkeeperClient<'a>,
 }
 
 impl TestFixture<'_> {
@@ -113,7 +111,6 @@ impl TestFixture<'_> {
         let router_id = Address::generate(&e);
         let treasury_id = Address::generate(&e);
         let bridge_oracle_id = Address::generate(&e);
-        let pegkeeper_id = Address::generate(&e);
         let dao_utils_id = Address::generate(&e);
 
         // deploy Blend Protocol dependencies
@@ -185,8 +182,7 @@ impl TestFixture<'_> {
         // Deploy orbit dependencies
         let dao_utils_client = create_dao_utils(&e, &dao_utils_id, wasm);
         let bridge_oracle_client = create_bridge_oracle(&e, &bridge_oracle_id, wasm, &admin, &mock_oracle_id, &mock_oracle_id);
-        let treasury_client = create_treasury(&e, &treasury_id, wasm, &admin, &pool_factory_id, &pegkeeper_id);
-        let pegkeeper_client = create_pegkeeper(&e, &pegkeeper_id, wasm, &treasury_id, &router_id);
+        let treasury_client = create_treasury(&e, &treasury_id, wasm, &admin, &pool_factory_id);
 
         let fixture = TestFixture {
             env: e,
@@ -210,7 +206,6 @@ impl TestFixture<'_> {
             ],
             dao_utils: dao_utils_client,
             treasury: treasury_client,
-            pegkeeper: pegkeeper_client,
         };
         fixture.jump(7 * 24 * 60 * 60);
         fixture

@@ -3,7 +3,6 @@ resolver = "2"
 
 members = [
     "treasury",
-    "pegkeeper",
     "test-suites",
     "bridge-oracle",
     "dao-utils"]
