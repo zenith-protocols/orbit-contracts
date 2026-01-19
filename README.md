@@ -44,10 +44,7 @@ This repository contains the smart contracts of **OrbitCDP**, a decentralized st
 
 ## Testing
 
-Test files are organized under:
-
-- `test-suites/`: Full integration scenarios and edge cases.
-- `mocks/`: Mock contracts and test scaffolding for isolated environments.
+The `test-suites` crate provides a complete testing SDK for OrbitCDP contracts. It includes a `TestFixture` that initializes the full protocol environment with mock tokens, Blend lending pools, and all OrbitCDP contracts. The SDK supports both native Rust and WASM-based testing modes, with contract client wrappers for seamless interaction with deployed contracts.
 
 Run tests using:
 ```bash

@@ -1,5 +1,5 @@
 pub use sep_40_oracle::{Asset, PriceData};
-use soroban_sdk::{contract, contractclient, contractimpl, vec, Address, Env, Symbol, Vec, Val, IntoVal, BytesN};
+use soroban_sdk::{contract, contractclient, contractimpl, vec, Address, Env, Symbol, Vec, Val, IntoVal};
 use crate::storage;
 
 #[contract]

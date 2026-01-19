@@ -1,13 +1,11 @@
 use crate::storage;
 use crate::dependencies::pool::{Client as PoolClient, Request};
 use crate::dependencies::pool_factory::{Client as PoolFactoryClient};
-use soroban_sdk::{contract, contractclient, contractimpl, panic_with_error, token, vec, Address, BytesN, Env, IntoVal, Symbol, TryFromVal, Val, Vec};
+use soroban_sdk::{contract, contractclient, contractimpl, panic_with_error, token, vec, Address, Env, IntoVal, Symbol, TryFromVal, Val, Vec};
 use soroban_sdk::auth::{ContractContext, InvokerContractAuthEntry, SubContractInvocation};
 use soroban_fixed_point_math::{i128, FixedPoint};
-use soroban_sdk::unwrap::UnwrapOptimized;
 use crate::constants::{REQUEST_TYPE_SUPPLY, REQUEST_TYPE_WITHDRAW, SCALAR_12};
 use crate::errors::TreasuryError;
-use crate::storage::TreasuryDataKey;
 
 #[contract]
 pub struct TreasuryContract;

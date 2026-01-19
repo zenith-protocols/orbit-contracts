@@ -17,7 +17,6 @@ jobs:
       release_name: ${{ github.ref_name }}
       release_description: 'OrbitCDP Bridge Oracle Release'
       package: 'bridge-oracle'
-      make_target: 'build'
     secrets:
       release_token: ${{ secrets.GITHUB_TOKEN }}
 
@@ -27,7 +26,6 @@ jobs:
       release_name: ${{ github.ref_name }}
       release_description: 'OrbitCDP DAO Utils Release'
       package: 'dao-utils'
-      make_target: 'build'
     secrets:
       release_token: ${{ secrets.GITHUB_TOKEN }}
 
@@ -37,6 +35,5 @@ jobs:
       release_name: ${{ github.ref_name }}
       release_description: 'OrbitCDP Treasuryh Release'
       package: 'treasury'
-      make_target: 'build'
     secrets:
       release_token: ${{ secrets.GITHUB_TOKEN }}
