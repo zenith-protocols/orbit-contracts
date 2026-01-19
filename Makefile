@@ -6,7 +6,6 @@ test: build
 build:
 	cargo rustc --manifest-path=bridge-oracle/Cargo.toml --crate-type=cdylib --target=wasm32-unknown-unknown --release
 	cargo rustc --manifest-path=dao-utils/Cargo.toml --crate-type=cdylib --target=wasm32-unknown-unknown --release
-	cargo rustc --manifest-path=pegkeeper/Cargo.toml --crate-type=cdylib --target=wasm32-unknown-unknown --release
 	cargo rustc --manifest-path=treasury/Cargo.toml --crate-type=cdylib --target=wasm32-unknown-unknown --release
 
 ifeq ($(OS),Windows_NT)
@@ -21,9 +20,6 @@ endif
 	stellar contract optimize \
 		--wasm target/wasm32-unknown-unknown/release/dao_utils.wasm \
 		--wasm-out target/wasm32-unknown-unknown/optimized/dao_utils.wasm
-	stellar contract optimize \
-		--wasm target/wasm32-unknown-unknown/release/pegkeeper.wasm \
-		--wasm-out target/wasm32-unknown-unknown/optimized/pegkeeper.wasm
 	stellar contract optimize \
 		--wasm target/wasm32-unknown-unknown/release/treasury.wasm \
 		--wasm-out target/wasm32-unknown-unknown/optimized/treasury.wasm
