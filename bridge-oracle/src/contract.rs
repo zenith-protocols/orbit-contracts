@@ -14,12 +14,6 @@ pub trait BridgeOracle {
     /// * `to` - The asset to convert to
     fn add_asset(e: Env, asset: Asset, to: Asset);
 
-    /// (Admin only) Set a new stellar oracle for the bridge oracle
-    /// # Arguments
-    /// * `stellar_oracle` - The stellar oracle address
-    /// * `other_oracle` - The other oracle address
-    fn set_oracles(e: Env, stellar_oracle: Address, other_oracle: Address);
-
     /// Fetch the number of decimals for the stellar oracle
     fn decimals(env: Env) -> u32;
 
@@ -63,16 +57,6 @@ impl BridgeOracle for BridgeOracleContract {
         storage::set_bridge_asset(&e, &asset, &to);
 
         e.events().publish(("BridgeOracle", Symbol::new(&e, "add_asset")), (asset.clone(), to.clone()));
-    }
-
-    fn set_oracles(e: Env, stellar_oracle: Address, other_oracle: Address) {
-        storage::extend_instance(&e);
-        let admin = storage::get_admin(&e);
-        admin.require_auth();
-        storage::set_stellar_oracle(&e, &stellar_oracle);
-        storage::set_other_oracle(&e, &other_oracle);
-
-        e.events().publish(("BridgeOracle", Symbol::new(&e, "set_oracles")), (stellar_oracle.clone(), other_oracle.clone()));
     }
 
     fn decimals(env: Env) -> u32 {
